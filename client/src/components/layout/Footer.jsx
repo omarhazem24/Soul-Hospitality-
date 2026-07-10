@@ -28,9 +28,9 @@ const FooterLink = ({ label, href }) => {
 
 export const Footer = () => {
   return (
-    <footer className="mt-16 bg-[#172331] text-white">
-      <div className="page-container py-16">
-        <div className="grid gap-10 lg:grid-cols-[1.15fr_0.85fr_0.85fr_1fr]">
+    <footer className="mt-14 bg-[#172331] text-white sm:mt-16">
+      <div className="page-container py-12 sm:py-16">
+        <div className="grid gap-8 sm:gap-10 lg:grid-cols-[1.15fr_0.85fr_0.85fr_1fr]">
           <div className="space-y-4">
             <BrandWordmark inverse />
             <p className="max-w-md text-sm leading-7 text-white/75">
@@ -101,7 +101,7 @@ export const Footer = () => {
           </div>
         </div>
 
-        <div className="mt-12 flex flex-col gap-3 border-t border-white/10 pt-6 text-xs uppercase tracking-[0.18em] text-white/55 md:flex-row md:items-center md:justify-between">
+        <div className="mt-10 flex flex-col gap-3 border-t border-white/10 pt-6 text-[10px] uppercase tracking-[0.16em] text-white/55 sm:mt-12 sm:text-xs sm:tracking-[0.18em] md:flex-row md:items-center md:justify-between">
           <span>© 2026 Soul Hospitality. All rights reserved.</span>
         </div>
       </div>

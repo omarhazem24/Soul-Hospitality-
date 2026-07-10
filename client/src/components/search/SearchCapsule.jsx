@@ -239,7 +239,7 @@ export const SearchCapsule = () => {
     const departDate = searchCriteria.departDate ? new Date(`${searchCriteria.departDate}T00:00:00`) : null;
 
     return (
-      <div className="absolute top-full left-0 mt-3 bg-white rounded-3xl shadow-2xl border border-slate-50 p-6 z-50 w-[340px] max-w-[calc(100vw-2rem)]">
+      <div className="absolute left-0 right-0 top-full z-50 mt-3 w-full rounded-3xl border border-slate-50 bg-white p-4 shadow-2xl sm:left-0 sm:right-auto sm:w-[340px] sm:p-6">
         <div className="mb-4 flex items-center justify-between text-brand">
           <button
             type="button"
@@ -299,7 +299,7 @@ export const SearchCapsule = () => {
     <form
       ref={capsuleRef}
       onSubmit={handleSubmit}
-      className="w-full bg-white rounded-[2rem] p-8 shadow-[0_24px_70px_rgba(40,63,94,0.1)] border border-slate-50 flex flex-col gap-5 overflow-visible relative z-40"
+      className="relative z-40 flex w-full flex-col gap-4 overflow-visible rounded-[1.6rem] border border-slate-50 bg-white p-4 shadow-[0_24px_70px_rgba(40,63,94,0.1)] sm:gap-5 sm:rounded-[2rem] sm:p-6 lg:p-8"
     >
       <div className="relative">
         <button
@@ -318,7 +318,7 @@ export const SearchCapsule = () => {
         </button>
 
         {destinationOpen ? (
-          <div className="absolute top-full left-0 mt-3 w-80 bg-white rounded-2xl shadow-2xl border border-slate-100 p-2 z-50">
+          <div className="absolute left-0 right-0 top-full z-50 mt-3 rounded-2xl border border-slate-100 bg-white p-2 shadow-2xl sm:left-0 sm:right-auto sm:w-80">
             {projectOptions.map((option) => (
               <button
                 key={option}
@@ -385,7 +385,7 @@ export const SearchCapsule = () => {
         </button>
 
         {guestOpen ? (
-          <div className="absolute top-full left-0 mt-3 w-[340px] max-w-[calc(100vw-2rem)] bg-white rounded-2xl shadow-2xl border border-slate-100 p-4 z-50">
+          <div className="absolute left-0 right-0 top-full z-50 mt-3 rounded-2xl border border-slate-100 bg-white p-4 shadow-2xl sm:left-0 sm:right-auto sm:w-[340px]">
             <div className="flex items-center justify-between gap-3">
               <button
                 type="button"
@@ -410,7 +410,7 @@ export const SearchCapsule = () => {
       <button
         type="submit"
         disabled={searchCriteria.arriveDate && searchCriteria.departDate ? !hasValidRange : false}
-        className="w-full bg-[#283f5e] text-white font-bold py-4 rounded-xl text-xs tracking-widest uppercase hover:bg-[#1e3047] transition-all duration-300 ease-out hover:shadow-lg hover:shadow-slate-900/20 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
+        className="w-full rounded-xl bg-[#283f5e] py-3.5 text-[11px] font-bold uppercase tracking-[0.2em] text-white transition-all duration-300 ease-out hover:bg-[#1e3047] hover:-translate-y-0.5 hover:shadow-lg hover:shadow-slate-900/20 active:translate-y-0 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 sm:py-4 sm:text-xs"
       >
         Search Stays
       </button>

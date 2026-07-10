@@ -259,7 +259,7 @@ export const Home = () => {
 
   return (
     <main className="bg-white">
-      <section className="relative isolate overflow-visible border-b border-slate-200 min-h-[80vh] md:min-h-[500px] lg:h-[55vh] lg:min-h-[500px]">
+      <section className="relative isolate overflow-visible border-b border-slate-200 min-h-[78vh] md:min-h-[500px] lg:h-[55vh] lg:min-h-[500px]">
         <div
           className="absolute inset-0 bg-cover bg-center"
           style={{ backgroundImage: `url(${HERO_BACKGROUND_IMAGE})` }}
@@ -268,14 +268,14 @@ export const Home = () => {
         <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/28 to-black/12" aria-hidden="true" />
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(2,6,23,0.12),rgba(2,6,23,0.35))]" aria-hidden="true" />
 
-        <div className="relative z-30 mx-auto flex w-full max-w-7xl flex-col gap-8 px-6 pb-12 pt-10 md:flex-row md:items-center md:justify-between md:gap-10 lg:pb-10 lg:pt-10 2xl:gap-12">
-          <div className="w-full md:w-1/2 flex flex-col items-start gap-8">
+        <div className="relative z-30 mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 pb-10 pt-8 sm:px-6 md:flex-row md:items-center md:justify-between md:gap-10 lg:pb-10 lg:pt-10 2xl:gap-12">
+          <div className="flex w-full flex-col items-start gap-6 md:w-1/2 md:gap-8">
             <p className="text-xs font-semibold uppercase tracking-[0.34em] text-white">Soul Hospitality</p>
             <div className="max-w-3xl space-y-4">
-              <h1 className="text-4xl font-semibold leading-[1.08] tracking-[0.12em] text-white md:text-5xl lg:text-6xl 2xl:text-7xl">
+              <h1 className="text-[2rem] font-semibold leading-[1.08] tracking-[0.1em] text-white sm:text-4xl md:text-5xl lg:text-6xl 2xl:text-7xl">
                 Discover Your Next Vacation.
               </h1>
-              <p className="max-w-2xl text-base font-medium leading-7 text-white md:text-lg 2xl:text-xl 2xl:leading-8">
+              <p className="max-w-2xl text-sm font-medium leading-6 text-white sm:text-base md:text-lg md:leading-7 2xl:text-xl 2xl:leading-8">
                 Reserve elevated homes, coastal escapes, and signature city stays with a frictionless search flow built for confident planning.
               </p>
             </div>
@@ -288,7 +288,7 @@ export const Home = () => {
 
       </section>
 
-      <section className="page-container py-16 lg:py-24">
+      <section className="page-container py-14 lg:py-24">
         <div className="mx-auto max-w-4xl text-center">
           <p className="text-xs font-semibold uppercase tracking-[0.34em] text-brand/65">EXPLORE SOUL</p>
           <h2 className="mt-4 text-3xl font-semibold leading-[1.15] tracking-[0.14em] text-brand md:text-5xl">
@@ -296,17 +296,17 @@ export const Home = () => {
           </h2>
         </div>
 
-        <div className="mt-10 flex gap-5 overflow-x-auto pb-2">
+        <div className="mt-10 flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2 sm:gap-5">
           {destinations.map((destination) => (
             <Link
               key={destination.title}
               to="/units"
-              className="group relative min-w-[18rem] overflow-hidden rounded-3xl border border-slate-200 bg-slate-50 no-underline shadow-[0_18px_70px_rgba(40,63,94,0.1)] md:min-w-[22rem]"
+              className="group relative min-w-[15rem] snap-start overflow-hidden rounded-3xl border border-slate-200 bg-slate-50 no-underline shadow-[0_18px_70px_rgba(40,63,94,0.1)] md:min-w-[22rem]"
             >
-              <img src={destination.image} alt={destination.title} className="h-[28rem] w-full object-cover transition duration-500 group-hover:scale-[1.03]" />
+              <img src={destination.image} alt={destination.title} className="h-[22rem] w-full object-cover transition duration-500 group-hover:scale-[1.03] sm:h-[28rem]" />
               <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(2,6,23,0)_35%,rgba(2,6,23,0.78)_100%)]" />
-              <div className="absolute inset-x-0 bottom-0 p-5 text-white">
-                <p className="text-lg font-semibold uppercase tracking-[0.14em] text-white">{destination.title}</p>
+              <div className="absolute inset-x-0 bottom-0 p-4 text-white sm:p-5">
+                <p className="text-base font-semibold uppercase tracking-[0.14em] text-white sm:text-lg">{destination.title}</p>
                 <span className="mt-2 inline-flex text-xs font-medium uppercase tracking-[0.18em] text-white/85">
                   Explore Stays →
                 </span>

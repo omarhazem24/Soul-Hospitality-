@@ -163,6 +163,7 @@ const normalizeUnits = (units) => {
 
 export const Properties = () => {
   const location = useLocation();
+  const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
   const [priceRange, setPriceRange] = useState(defaultPriceRange);
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -250,6 +251,14 @@ export const Properties = () => {
     };
   }, [appliedFilters, sortOption]);
 
+  useEffect(() => {
+    document.body.style.overflow = isMobileFiltersOpen ? 'hidden' : '';
+
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isMobileFiltersOpen]);
+
   const toggleListValue = (setter, value) => {
     setter((current) =>
       current.includes(value)
@@ -302,6 +311,7 @@ export const Properties = () => {
       projectName,
       bedrooms: bedrooms > 0 ? String(bedrooms) : ''
     });
+    setIsMobileFiltersOpen(false);
   };
 
   const resetFilters = () => {
@@ -315,6 +325,7 @@ export const Properties = () => {
     setSearchGuests(0);
     setPriceRange(defaultPriceRange);
     setAppliedFilters(defaultAppliedFilters);
+    setIsMobileFiltersOpen(false);
   };
 
   const filteredListings = useMemo(() => {
@@ -348,6 +359,14 @@ export const Properties = () => {
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setIsMobileFiltersOpen(true)}
+              className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-slate-600 lg:hidden"
+            >
+              <SlidersHorizontal className="h-4 w-4" strokeWidth={1.6} aria-hidden="true" />
+              Filters
+            </button>
             <label className="border border-slate-200 rounded-lg px-4 py-2 text-xs font-medium text-slate-600 bg-white inline-flex items-center gap-2">
               <span>Show:</span>
               <select
@@ -397,8 +416,36 @@ export const Properties = () => {
           </div>
         </div>
 
+        {isMobileFiltersOpen ? (
+          <button
+            type="button"
+            aria-label="Close filters"
+            className="fixed inset-0 z-40 bg-slate-900/30 lg:hidden"
+            onClick={() => setIsMobileFiltersOpen(false)}
+          />
+        ) : null}
+
         <div className="flex flex-col gap-8 lg:flex-row lg:items-start 2xl:gap-10">
-          <aside className="w-full lg:w-[380px] bg-white border border-slate-100 rounded-3xl p-4 sm:p-5 lg:rounded-[2rem] lg:p-6 flex flex-col items-center gap-4 sm:gap-5 lg:gap-6 self-start lg:sticky lg:top-6 [&>div]:w-full [&>div]:max-w-[340px]">
+          <aside
+            className={[
+              'w-full bg-white border border-slate-100 rounded-3xl p-4 sm:p-5 lg:rounded-[2rem] lg:p-6 flex flex-col items-center gap-4 sm:gap-5 lg:gap-6 self-start [&>div]:w-full [&>div]:max-w-[340px]',
+              isMobileFiltersOpen
+                ? 'fixed inset-x-3 bottom-3 top-20 z-50 overflow-y-auto shadow-2xl'
+                : 'hidden',
+              'lg:sticky lg:top-6 lg:z-auto lg:flex lg:w-[380px] lg:overflow-visible lg:shadow-none'
+            ].join(' ')}
+          >
+            <div className="mb-1 flex items-center justify-between lg:hidden">
+              <h2 className="text-sm font-semibold text-slate-800">Filters</h2>
+              <button
+                type="button"
+                onClick={() => setIsMobileFiltersOpen(false)}
+                className="rounded-full border border-slate-200 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600"
+              >
+                Close
+              </button>
+            </div>
+
             <div>
               <h2 className="mb-2 text-xs font-bold text-slate-800 sm:text-sm">Property Type</h2>
               <div className="max-h-48 overflow-y-auto pr-3 space-y-3 thin-scrollbar">

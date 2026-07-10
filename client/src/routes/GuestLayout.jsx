@@ -5,7 +5,7 @@ import { Navbar } from '../components/layout/Navbar.jsx';
 
 export const GuestLayout = () => {
   return (
-    <div className="min-h-screen bg-white text-brand">
+    <div className="min-h-screen overflow-x-hidden bg-white text-brand">
       <Navbar />
       <Outlet />
       <Footer />
