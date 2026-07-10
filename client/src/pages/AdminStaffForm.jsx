@@ -1,18 +1,40 @@
-import React, { useState } from 'react';
-import { createStaffMember } from '../api/http.js';
+import React, { useEffect, useState } from 'react';
+import { createStaffMember, deleteStaffAccount, fetchStaffAccounts } from '../api/http.js';
+import { useAuth } from '../context/AuthContext.jsx';
 
 const initialState = {
+  role: 'Sales',
   name: '',
-  email: '',
-  phone_number: '',
-  password: '',
-  role: 'secondary_admin'
+  email: ''
 };
 
 export const AdminStaffForm = () => {
+  const { user } = useAuth();
   const [formState, setFormState] = useState(initialState);
+  const [staffAccounts, setStaffAccounts] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [deletingId, setDeletingId] = useState('');
   const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
+
+  const loadStaffAccounts = async () => {
+    setLoading(true);
+    setError('');
+
+    try {
+      const payload = await fetchStaffAccounts();
+      setStaffAccounts(Array.isArray(payload) ? payload : []);
+    } catch (loadError) {
+      setError(loadError.message || 'Failed to load staff accounts.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadStaffAccounts();
+  }, []);
 
   const handleChange = (field, value) => {
     setFormState((current) => ({ ...current, [field]: value }));
@@ -22,69 +44,176 @@ export const AdminStaffForm = () => {
     event.preventDefault();
     setSubmitting(true);
     setMessage('');
+    setError('');
 
     try {
-      await createStaffMember(formState);
+      const createdStaff = await createStaffMember({
+        role: formState.role,
+        name: formState.name,
+        email: formState.email,
+        phone_number: '0000000000'
+      });
       setFormState(initialState);
-      setMessage('Staff profile created successfully.');
+      setMessage(`${createdStaff?.role || 'Staff'} account created with Staff ID ${createdStaff?.staffId || 'N/A'}. Temporary password: ${createdStaff?.temporaryPassword || 'Soul@123'}.`);
+      await loadStaffAccounts();
     } catch (submitError) {
-      setMessage(submitError.message);
+      setError(submitError.message || 'Failed to create staff account.');
     } finally {
       setSubmitting(false);
     }
   };
 
+  const handleDelete = async (staffId) => {
+    if (!staffId) {
+      return;
+    }
+
+    const confirmed = window.confirm('Delete this staff account permanently?');
+    if (!confirmed) {
+      return;
+    }
+
+    setDeletingId(staffId);
+    setMessage('');
+    setError('');
+
+    try {
+      await deleteStaffAccount(staffId);
+      setMessage('Staff account deleted successfully.');
+      await loadStaffAccounts();
+    } catch (deleteError) {
+      setError(deleteError.message || 'Failed to delete staff account.');
+    } finally {
+      setDeletingId('');
+    }
+  };
+
+  const roleBadgeClass = (role) => role === 'Admin'
+    ? 'bg-indigo-50 text-indigo-700 border border-indigo-200'
+    : 'bg-emerald-50 text-emerald-700 border border-emerald-200';
+
   return (
     <div className="space-y-6">
       <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.28em] text-brand/70">Recruitment / Staff Profiling</p>
-        <h1 className="mt-3 text-2xl font-semibold uppercase tracking-[0.18em] text-brand">Create Staff Profile</h1>
+        <p className="text-xs font-semibold uppercase tracking-[0.28em] text-brand/70">Administration / Staff Management</p>
+        <h1 className="mt-3 text-2xl font-semibold uppercase tracking-[0.18em] text-brand">Staff Account Management</h1>
+        <p className="mt-2 text-sm text-brand/70">
+          Create Admin or Sales credentials with backend-generated Staff IDs and the default temporary password Soul@123.
+        </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="grid gap-5 lg:grid-cols-2">
-        {[
-          ['name', 'Name'],
-          ['email', 'Email'],
-          ['phone_number', 'Phone Number'],
-          ['password', 'Password']
-        ].map(([field, label]) => (
-          <label key={field} className="grid gap-2 text-xs uppercase tracking-[0.18em] text-brand/70">
-            {label}
-            <input
-              type={field === 'password' ? 'password' : 'text'}
-              value={formState[field]}
-              onChange={(event) => handleChange(field, event.target.value)}
-              className="rounded-sm border border-slate-200 px-4 py-3 text-sm text-brand outline-none"
-              required
-            />
-          </label>
-        ))}
+      <section className="rounded-2xl border border-slate-200 bg-white p-6">
+        <form onSubmit={handleSubmit} className="grid gap-5 lg:grid-cols-2">
+          <div className="lg:col-span-2">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-brand/70">Account Type</p>
+            <div className="flex gap-2">
+              {['Admin', 'Sales'].map((roleOption) => (
+                <button
+                  key={roleOption}
+                  type="button"
+                  onClick={() => handleChange('role', roleOption)}
+                  className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors ${formState.role === roleOption ? 'bg-[#283f5e] text-white' : 'border border-slate-200 bg-white text-slate-600 hover:border-[#283f5e] hover:text-[#283f5e]'}`}
+                >
+                  New {roleOption} Account
+                </button>
+              ))}
+            </div>
+          </div>
 
-        <label className="grid gap-2 text-xs uppercase tracking-[0.18em] text-brand/70 lg:col-span-2">
-          Role
-          <select
-            value={formState.role}
-            onChange={(event) => handleChange('role', event.target.value)}
-            className="rounded-sm border border-slate-200 px-4 py-3 text-sm text-brand outline-none"
-            required
-          >
-            <option value="secondary_admin">Secondary Admin</option>
-            <option value="primary_admin">Primary Admin</option>
-          </select>
-        </label>
+          {[
+            ['name', 'Name', 'text'],
+            ['email', 'Email', 'email']
+          ].map(([field, label, inputType]) => (
+            <label key={field} className="grid gap-2 text-xs uppercase tracking-[0.18em] text-brand/70">
+              {label}
+              <input
+                type={inputType}
+                value={formState[field]}
+                onChange={(event) => handleChange(field, event.target.value)}
+                className="rounded-sm border border-slate-200 px-4 py-3 text-sm text-brand outline-none"
+                required
+              />
+            </label>
+          ))}
 
-        {message ? <div className="lg:col-span-2 border border-slate-200 bg-slate-50 p-3 text-sm text-brand/75">{message}</div> : null}
+          <div className="lg:col-span-2 rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600">
+            Staff ID is auto-generated by role format: <strong>Axxxx</strong> for Admin, <strong>Sxxxx</strong> for Sales. Temporary password is <strong>Soul@123</strong>.
+          </div>
 
-        <div className="lg:col-span-2 flex justify-end">
+          {message ? <div className="lg:col-span-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700">{message}</div> : null}
+          {error ? <div className="lg:col-span-2 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">{error}</div> : null}
+
+          <div className="lg:col-span-2 flex justify-end">
+            <button
+              type="submit"
+              disabled={submitting}
+              className="rounded-sm bg-brand px-6 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-white disabled:opacity-70"
+            >
+              {submitting ? 'Saving...' : `Create ${formState.role} Account`}
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <section className="rounded-2xl border border-slate-200 bg-white p-6">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-brand">Staff Accounts</h2>
           <button
-            type="submit"
-            disabled={submitting}
-            className="rounded-sm bg-brand px-6 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-white disabled:opacity-70"
+            type="button"
+            onClick={loadStaffAccounts}
+            className="rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-600 hover:border-[#283f5e] hover:text-[#283f5e]"
           >
-            {submitting ? 'Saving...' : 'Create Staff Profile'}
+            Refresh
           </button>
         </div>
-      </form>
+
+        {loading ? <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">Loading staff accounts...</div> : null}
+
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-left text-sm">
+            <thead className="border-b border-slate-200 text-xs uppercase tracking-[0.14em] text-slate-500">
+              <tr>
+                <th className="py-3 pr-4">Name</th>
+                <th className="py-3 pr-4">Staff ID</th>
+                <th className="py-3 pr-4">Email</th>
+                <th className="py-3 pr-4">Role</th>
+                <th className="py-3 pr-4">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {staffAccounts.map((staff) => {
+                const isSelf = String(user?._id || '') === String(staff._id || '');
+                return (
+                  <tr key={staff._id} className="border-b border-slate-100 last:border-b-0">
+                    <td className="py-3 pr-4 font-medium text-slate-800">{staff.name}</td>
+                    <td className="py-3 pr-4 text-slate-600">{staff.staffId || staff.uniqueSalesId || '-'}</td>
+                    <td className="py-3 pr-4 text-slate-600">{staff.email}</td>
+                    <td className="py-3 pr-4">
+                      <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${roleBadgeClass(staff.role)}`}>
+                        {staff.role}
+                      </span>
+                    </td>
+                    <td className="py-3 pr-4">
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(staff._id)}
+                        disabled={deletingId === staff._id || isSelf}
+                        className="rounded-full border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700 transition-colors hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-50"
+                        title={isSelf ? 'You cannot delete your own account' : 'Delete account'}
+                      >
+                        {deletingId === staff._id ? 'Deleting...' : 'Delete Account'}
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+          {!loading && staffAccounts.length === 0 ? (
+            <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">No staff accounts found.</div>
+          ) : null}
+        </div>
+      </section>
     </div>
   );
 };

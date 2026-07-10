@@ -3,8 +3,8 @@ import { Booking } from '../models/Booking.js';
 import { Payment } from '../models/Payment.js';
 import { AppError } from '../utils/AppError.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
-import { getRedisClient } from '../config/redis.js';
 import { createReservationHold, normalizeBookingRequest } from '../services/bookingService.js';
+import { applyBookingCommissionSnapshot } from '../utils/bookingCommission.js';
 
 export const listBookingRequests = asyncHandler(async (request, response) => {
   const filter = {};
@@ -30,7 +30,10 @@ export const listBookingRequests = asyncHandler(async (request, response) => {
 });
 
 export const createAdminBooking = asyncHandler(async (request, response) => {
-  const bookingPayload = normalizeBookingRequest(request.body);
+  const bookingPayload = normalizeBookingRequest({
+    ...request.body,
+    is_admin_created: 'true'
+  });
 
   if (!bookingPayload.unitId || !bookingPayload.checkInDate || !bookingPayload.checkOutDate) {
     throw new AppError('unit_id, check_in_date, and check_out_date are required', 400);
@@ -39,7 +42,8 @@ export const createAdminBooking = asyncHandler(async (request, response) => {
   const result = await createReservationHold({
     ...bookingPayload,
     userId: request.user?.id,
-    paymentMethod: request.body.payment_method || 'cash'
+    paymentMethod: request.body.payment_method || 'cash',
+    isAdminCreated: true
   });
 
   response.status(201).json({
@@ -50,35 +54,56 @@ export const createAdminBooking = asyncHandler(async (request, response) => {
 
 export const updateBookingRequestStatus = asyncHandler(async (request, response) => {
   const { status } = request.body;
-  const allowedStatuses = ['approved', 'rejected'];
+  const allowedStatuses = ['Pending', 'Accepted', 'Rejected'];
 
   if (!allowedStatuses.includes(status)) {
-    throw new AppError('status must be approved or rejected', 400);
+    throw new AppError('status must be Pending, Accepted, or Rejected', 400);
   }
 
   const session = await mongoose.startSession();
 
+  const persistStatusUpdate = async (activeSession = null) => {
+    const maybeSession = (query) => (activeSession ? query.session(activeSession) : query);
+
+    const booking = await maybeSession(Booking.findById(request.params.id));
+
+    if (!booking) {
+      throw new AppError('Booking request not found', 404);
+    }
+
+    booking.status = status;
+    booking.holdExpiresAt = status === 'Pending' ? booking.holdExpiresAt : null;
+    applyBookingCommissionSnapshot(booking, status === 'Accepted' ? new Date() : null);
+
+    if (activeSession) {
+      await booking.save({ session: activeSession });
+      if (status === 'Rejected') {
+        await Payment.updateOne({ booking_id: booking._id }, { status: 'failed' }, { session: activeSession });
+      }
+    } else {
+      await booking.save();
+      if (status === 'Rejected') {
+        await Payment.updateOne({ booking_id: booking._id }, { status: 'failed' });
+      }
+    }
+
+    return booking;
+  };
+
   try {
-    const updatedBooking = await session.withTransaction(async () => {
-      const booking = await Booking.findById(request.params.id).session(session);
-
-      if (!booking) {
-        throw new AppError('Booking request not found', 404);
+    let updatedBooking;
+    try {
+      updatedBooking = await session.withTransaction(async () => persistStatusUpdate(session));
+    } catch (error) {
+      if (String(error?.message || '').includes('Transaction numbers are only allowed')) {
+        updatedBooking = await persistStatusUpdate(null);
+      } else {
+        throw error;
       }
+    }
 
-      const nextStatus = status;
-      booking.status = nextStatus;
-      await booking.save({ session });
-
-      if (nextStatus === 'rejected') {
-        await Payment.updateOne({ booking_id: booking._id }, { status: 'failed' }, { session });
-      }
-
-      return booking;
-    });
-
-    if (status === 'rejected') {
-      await getRedisClient().del(`booking:hold:${updatedBooking._id.toString()}`);
+    if (status === 'Rejected') {
+      await Booking.updateOne({ _id: updatedBooking._id }, { holdExpiresAt: null });
     }
 
     response.json({
@@ -88,4 +113,20 @@ export const updateBookingRequestStatus = asyncHandler(async (request, response)
   } finally {
     session.endSession();
   }
+});
+
+export const deleteBookingRequest = asyncHandler(async (request, response) => {
+  const booking = await Booking.findById(request.params.id);
+
+  if (!booking) {
+    throw new AppError('Booking request not found', 404);
+  }
+
+  await Payment.deleteOne({ booking_id: booking._id });
+  await Booking.deleteOne({ _id: booking._id });
+
+  response.json({
+    success: true,
+    message: 'Reservation deleted successfully'
+  });
 });

@@ -1,41 +1,28 @@
 import { Review } from '../models/Review.js';
 import { AppError } from '../utils/AppError.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
-import { uploadBufferToCloudinary } from '../services/cloudinaryService.js';
-
-const uploadPhotos = async (files = []) => {
-  if (!files.length) {
-    return [];
-  }
-
-  const uploads = await Promise.all(
-    files.map((file) => uploadBufferToCloudinary(file.buffer, { folder: 'reviews', resourceType: 'image' }))
-  );
-
-  return uploads.map((item) => item.secure_url).filter(Boolean);
-};
 
 export const createReview = asyncHandler(async (request, response) => {
-  const { unitId, title, description, rating } = request.body;
+  const routeUnitId = request.params.unitId;
+  const { unitId: bodyUnitId, guestName, rating, comment } = request.body;
+  const unitId = routeUnitId || bodyUnitId;
   const userId = request.user?.id || request.user?.userId || request.user?._id;
+  const displayName = String(guestName || request.user?.name || 'Guest').trim();
 
   if (!userId) {
     throw new AppError('Authentication payload missing user id', 401);
   }
 
-  if (!unitId || !title || !description || !rating) {
-    throw new AppError('unitId, title, description, and rating are required', 400);
+  if (!unitId || !rating || !comment) {
+    throw new AppError('unitId, rating, and comment are required', 400);
   }
 
-  const photos = await uploadPhotos(request.files || []);
-
   const review = await Review.create({
-    user: userId,
-    unit: unitId,
-    title,
-    description,
+    userId: userId,
+    unitId,
+    guestName: displayName,
     rating: Number(rating),
-    photos,
+    comment,
     status: 'visible'
   });
 
@@ -48,8 +35,8 @@ export const createReview = asyncHandler(async (request, response) => {
 export const getUnitReviews = asyncHandler(async (request, response) => {
   const { unitId } = request.params;
 
-  const reviews = await Review.find({ unit: unitId, status: 'visible' })
-    .populate('user', 'name profile_photo')
+  const reviews = await Review.find({ unitId, status: 'visible' })
+    .populate('userId', 'name profile_photo')
     .sort({ createdAt: -1 });
 
   response.json({
@@ -71,8 +58,8 @@ const parseSortOption = (sortOption = 'createdAt_desc') => {
 
 export const listAllReviews = asyncHandler(async (request, response) => {
   const reviews = await Review.find()
-    .populate('user', 'name profile_photo email')
-    .populate('unit', 'title location unit_type photos status capacity')
+    .populate('userId', 'name profile_photo email')
+    .populate('unitId', 'title location unit_type photos status capacity')
     .sort(parseSortOption(request.query.sort));
 
   response.json({

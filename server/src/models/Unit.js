@@ -1,5 +1,35 @@
 import mongoose from 'mongoose';
 
+const unitTypeMap = new Map([
+  ['apartment', 'Apartment'],
+  ['studio', 'Studio'],
+  ['villa', 'Villa'],
+  ['townhouse', 'Townhouse'],
+  ['penthouse', 'Penthouse'],
+  ['chalet', 'Chalet'],
+  ['hotel room', 'Hotel Room']
+]);
+
+const destinationOptions = [
+  'North Coast',
+  'Ain Sokhna',
+  'Down Town',
+  'Zamalek',
+  'El Sheikh Zayed',
+  'New Cairo',
+  'Alexandria',
+  'Aswan',
+  'Luxor'
+];
+
+const normalizeUnitType = (value) => {
+  if (typeof value !== 'string') {
+    return value;
+  }
+
+  return unitTypeMap.get(value.trim().toLowerCase()) || value;
+};
+
 const unitSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -10,15 +40,21 @@ const unitSchema = new mongoose.Schema({
     type: String,
     required: true,
     unique: true,
-    match: [/^[A-Z0-9]{3}-[A-Z0-9]{3}-[A-Z0-9]{2}$/, 'Please use the format XXX-XXX-XX']
+    trim: true
   },
   projectName: {
     type: String,
     required: true
   },
+  destination: {
+    type: String,
+    required: true,
+    enum: destinationOptions
+  },
   type: {
     type: String,
     required: true,
+    set: normalizeUnitType,
     enum: ['Apartment', 'Studio', 'Villa', 'Townhouse', 'Penthouse', 'Chalet', 'Hotel Room']
   },
   bedrooms: {
@@ -41,9 +77,31 @@ const unitSchema = new mongoose.Schema({
     type: Number,
     required: true
   },
-  utilitiesCostPerNight: {
+  capacity: {
     type: Number,
-    default: 500
+    required: true,
+    min: 1
+  },
+  beachAccessPricePerPersonPerWeek: {
+    type: Number,
+    default: 0
+  },
+  beachAccessPricePerPerson: {
+    type: Number,
+    default: 0
+  },
+  beachAccessExtraGuestPricePerPerson: {
+    type: Number,
+    default: 0
+  },
+  beachAccessDays: {
+    type: Number,
+    default: 7,
+    min: 1
+  },
+  housekeepingMandatoryPrice: {
+    type: Number,
+    default: 0
   },
   status: {
     type: String,
@@ -58,30 +116,39 @@ const unitSchema = new mongoose.Schema({
   description: {
     type: String
   },
+  location_link: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  amenities: [{
+    type: String,
+    trim: true
+  }],
+  facilities: [{
+    type: String,
+    trim: true
+  }],
   photos: [{
     type: String
   }],
-  commissionStructure: {
-    mode: {
-      type: String,
-      required: true,
-      enum: ['Mode A', 'Mode B', 'Mode C']
-    },
-    modeAValue: { type: Number },
-    modeBValues: {
-      ownerRate: { type: Number },
-      tenantRate: { type: Number }
-    },
-    modeCValues: {
-      bookingSourceRates: { type: Map, of: Number },
-      tenantFee: { type: Number }
-    }
+  averageRating: {
+    type: Number,
+    default: 0
+  },
+  reviewCount: {
+    type: Number,
+    default: 0
   }
 }, {
   timestamps: true,
   id: false,
   toJSON: { virtuals: true },
   toObject: { virtuals: true }
+});
+
+unitSchema.pre('validate', async function () {
+  this.type = normalizeUnitType(this.type);
 });
 
 const Unit = mongoose.model('Unit', unitSchema);

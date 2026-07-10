@@ -1,18 +1,34 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { Building2, CalendarCheck2, CalendarDays, CircleDollarSign, ReceiptText } from 'lucide-react';
+import { useAuth } from '../context/AuthContext.jsx';
 import { fetchDashboardSummary } from '../api/http.js';
 
 const formatCount = (value) => Number(value || 0).toLocaleString();
 
-const MetricCard = ({ label, value, subtitle, iconClass }) => (
-  <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-    <div className={`mb-4 flex h-11 w-11 items-center justify-center rounded-xl ${iconClass}`}>□</div>
-    <strong className="block text-3xl font-bold text-[#283f5e]">{value}</strong>
-    <span className="mt-1 block text-sm font-medium text-slate-500">{label}</span>
-    <p className="mt-2 text-xs text-slate-400">{subtitle}</p>
-  </article>
-);
+const iconMap = {
+  'Total Units': Building2,
+  'Check-Ins': CalendarCheck2,
+  'Check-Outs': CalendarDays,
+  'Revenue This Month': ReceiptText,
+};
+
+const MetricCard = ({ label, value, subtitle, iconClass }) => {
+  const Icon = iconMap[label] || CircleDollarSign;
+
+  return (
+    <article className="rounded-2xl border border-slate-200/70 bg-slate-50 p-5 shadow-none">
+      <div className={`mb-4 flex h-11 w-11 items-center justify-center rounded-xl ${iconClass}`}>
+        <Icon className="h-5 w-5" strokeWidth={1.5} aria-hidden="true" />
+      </div>
+      <strong className="block text-3xl font-bold text-[#283f5e]">{value}</strong>
+      <span className="mt-1 block text-sm font-medium text-slate-500">{label}</span>
+      <p className="mt-2 text-xs text-slate-400">{subtitle}</p>
+    </article>
+  );
+};
 
 export const AdminOverview = () => {
+  const { user } = useAuth();
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -55,27 +71,39 @@ export const AdminOverview = () => {
     return [
       {
         label: 'Total Units',
-        value: formatCount(summary.totalUnits),
+        value: formatCount(summary.totalUnitsInventoryCount),
         subtitle: 'Live from units collection',
         iconClass: 'bg-blue-50 text-blue-600'
       },
       {
-        label: 'Total Reservations',
-        value: formatCount(summary.totalReservations),
-        subtitle: 'Across all projects',
+        label: 'Check-Ins',
+        value: formatCount(summary.checkInsCount),
+        subtitle: 'Current month arrivals',
         iconClass: 'bg-violet-50 text-violet-600'
       },
       {
-        label: 'Check-Ins Today',
-        value: formatCount(summary.checkInsToday),
-        subtitle: summary.checkInsToday > 0 ? 'Arrivals in progress' : 'No arrivals today',
+        label: 'Check-Outs',
+        value: formatCount(summary.checkOutsCount),
+        subtitle: 'Current month departures',
         iconClass: 'bg-emerald-50 text-emerald-600'
       },
       {
-        label: 'Check-Outs Today',
-        value: formatCount(summary.checkOutsToday),
-        subtitle: summary.checkOutsToday > 0 ? 'Departures scheduled' : 'No departures today',
+        label: 'Revenue This Month',
+        value: formatCount(summary.totalRevenueCurrentMonth),
+        subtitle: 'Accepted bookings only',
         iconClass: 'bg-orange-50 text-orange-600'
+      },
+      {
+        label: 'Pending Payments',
+        value: formatCount(summary.pendingPaymentsCurrentMonth),
+        subtitle: 'Current month pending total',
+        iconClass: 'bg-slate-100 text-slate-700'
+      },
+      {
+        label: 'Monthly Reservations',
+        value: formatCount(summary.totalMonthlyReservations),
+        subtitle: 'Accepted current month bookings',
+        iconClass: 'bg-rose-50 text-rose-600'
       }
     ];
   }, [summary]);
@@ -84,7 +112,9 @@ export const AdminOverview = () => {
     <div className="space-y-6">
       <div>
         <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-400">Dashboard</p>
-        <h1 className="mt-3 text-3xl font-bold text-[#283f5e]">Welcome back, Saif Magdy — Sunday, 28 June 2026</h1>
+        <h1 className="mt-3 text-3xl font-bold text-[#283f5e]">
+          Welcome back{user?.name ? `, ${user.name}` : ''}
+        </h1>
       </div>
 
       {loading ? <div className="rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-500 shadow-sm">Loading live dashboard summary...</div> : null}
@@ -96,43 +126,12 @@ export const AdminOverview = () => {
         ))}
       </div>
 
-      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="mb-4 flex items-center gap-2 text-[#283f5e]">
-          <span>▦</span>
-          <h2 className="text-lg font-bold">Reservations & Occupancy by Project</h2>
+      <section className="rounded-3xl border border-slate-200/70 bg-slate-50 p-6 shadow-none">
+        <div className="mb-2 flex items-center gap-2 text-[#283f5e]">
+          <CircleDollarSign className="h-5 w-5" strokeWidth={1.5} aria-hidden="true" />
+          <h2 className="text-lg font-bold">Current Month Performance</h2>
         </div>
-
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-left text-sm">
-            <thead className="border-b border-slate-200 text-xs uppercase tracking-[0.16em] text-slate-400">
-              <tr>
-                <th className="py-3 pr-4">Project</th>
-                <th className="py-3 pr-4">Total Units</th>
-                <th className="py-3 pr-4">Total Reservations</th>
-                <th className="py-3 pr-4">Occupied Now</th>
-                <th className="py-3 pr-4">Occupancy %</th>
-              </tr>
-            </thead>
-            <tbody>
-              {(summary?.occupancyByProject || []).map((row) => (
-                <tr key={row.projectName} className="border-b border-slate-100 last:border-b-0">
-                  <td className="py-4 pr-4 font-semibold text-slate-800">• {row.projectName}</td>
-                  <td className="py-4 pr-4 text-slate-600">{row.totalUnits}</td>
-                  <td className="py-4 pr-4 text-slate-600">{row.totalReservations}</td>
-                  <td className="py-4 pr-4 text-slate-600">{row.occupiedNow} / {row.totalUnits}</td>
-                  <td className="py-4 pr-4">
-                    <div className="flex items-center gap-3">
-                      <div className="h-2 w-32 rounded-full bg-slate-100">
-                        <div className="h-2 rounded-full bg-[#283f5e]" style={{ width: `${Math.min(row.occupancyPercent, 100)}%` }} />
-                      </div>
-                      <span className="text-xs font-semibold text-slate-500">{row.occupancyPercent}%</span>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <p className="text-sm text-slate-500">The admin summary now focuses on the six current-month blocks used by the revised portal split.</p>
       </section>
     </div>
   );

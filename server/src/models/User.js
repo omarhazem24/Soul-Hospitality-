@@ -1,11 +1,11 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema(
   {
     name: {
       type: String,
       required: true,
-      trim: true
+      trim: true,
     },
     email: {
       type: String,
@@ -13,39 +13,54 @@ const userSchema = new mongoose.Schema(
       unique: true,
       index: true,
       trim: true,
-      lowercase: true
+      lowercase: true,
     },
     phone_number: {
       type: String,
       required: true,
-      trim: true
-    },
-    username: {
-      type: String,
       trim: true,
-      lowercase: true,
-      unique: true,
-      sparse: true,
-      index: true,
-      default: null
     },
     password_hash: {
       type: String,
-      required: true
+      required: true,
     },
     profile_photo: {
       type: String,
-      default: null
+      default: null,
     },
     role: {
       type: String,
-      enum: ['customer', 'secondary_admin', 'primary_admin'],
-      default: 'customer'
-    }
+      enum: ["Admin", "Sales", "Customer"],
+      default: "Customer",
+    },
+    uniqueSalesId: {
+      type: String,
+      unique: true,
+      sparse: true,
+      trim: true,
+    },
+    staffId: {
+      type: String,
+      unique: true,
+      sparse: true,
+      trim: true,
+    },
+    isFirstLogin: {
+      type: Boolean,
+      default: true,
+    },
+    passwordResetTokenHash: {
+      type: String,
+      default: null,
+    },
+    passwordResetExpiresAt: {
+      type: Date,
+      default: null,
+    },
   },
   {
-    timestamps: true
-  }
+    timestamps: true,
+  },
 );
 
-export const User = mongoose.model('User', userSchema);
+export const User = mongoose.model("User", userSchema);

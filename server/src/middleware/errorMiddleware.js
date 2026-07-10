@@ -11,7 +11,7 @@ export const errorHandler = (err, request, response, next) => {
     if (err.code === 'LIMIT_UNEXPECTED_FILE') {
       return response.status(400).json({
         success: false,
-        message: "Multer configuration error: The multi-part file field key must be named exactly 'photos'."
+        message: "Multer configuration error: unexpected file field. Use 'photos' for unit uploads and 'id_photos' for booking identity uploads."
       });
     }
 
@@ -29,6 +29,15 @@ export const errorHandler = (err, request, response, next) => {
   }
 
   const statusCode = err.statusCode || 500;
+
+  if (statusCode >= 500) {
+    console.error('Unhandled server error', {
+      message: err?.message,
+      stack: err?.stack,
+      path: request?.originalUrl,
+      method: request?.method
+    });
+  }
 
   return response.status(statusCode).json({
     success: false,

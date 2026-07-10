@@ -1,13 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-
-const DESTINATION_OPTIONS = [
-  'North Coast (Marassi, Gaia, Fouka Bay)',
-  'Ain Sokhna (Il Monte Galala)',
-  'Zamalek',
-  'New Cairo',
-  'Down Town'
-];
+import { fetchProjectNames } from '../../api/http.js';
 
 const WEEKDAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 
@@ -57,6 +50,23 @@ const formatDateLabel = (value) => {
   });
 };
 
+const formatCalendarDayLabel = (value) => {
+  if (!value) {
+    return 'Select date';
+  }
+
+  const date = new Date(`${value}T00:00:00`);
+  if (Number.isNaN(date.getTime())) {
+    return 'Select date';
+  }
+
+  return date.toLocaleDateString('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric'
+  });
+};
+
 const toQueryString = (criteria) => {
   const params = new URLSearchParams();
 
@@ -81,6 +91,7 @@ const toQueryString = (criteria) => {
 
 export const SearchCapsule = () => {
   const navigate = useNavigate();
+  const [projectOptions, setProjectOptions] = useState([]);
   const [searchCriteria, setSearchCriteria] = useState({
     destination: '',
     arriveDate: '',
@@ -105,6 +116,31 @@ export const SearchCapsule = () => {
     return () => document.removeEventListener('mousedown', handleOutsideClick);
   }, []);
 
+  useEffect(() => {
+    let mounted = true;
+
+    const loadProjects = async () => {
+      try {
+        const payload = await fetchProjectNames();
+        const nextProjects = Array.isArray(payload) ? payload : [];
+
+        if (mounted) {
+          setProjectOptions(nextProjects);
+        }
+      } catch {
+        if (mounted) {
+          setProjectOptions([]);
+        }
+      }
+    };
+
+    loadProjects();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   const destinationLabel = useMemo(() => {
     if (!searchCriteria.destination) {
       return 'Where to go?';
@@ -114,13 +150,19 @@ export const SearchCapsule = () => {
   }, [searchCriteria.destination]);
 
   const openCalendar = (field) => {
-    const selectedValue = field === 'arrive' ? searchCriteria.arriveDate : searchCriteria.departDate;
+    const selectedValue = field === 'arrive'
+      ? searchCriteria.arriveDate
+      : searchCriteria.departDate || searchCriteria.arriveDate;
     const selectedDate = selectedValue ? new Date(`${selectedValue}T00:00:00`) : new Date();
 
     setActiveDateField(field);
     setDestinationOpen(false);
     setGuestOpen(false);
     setCalendarMonth(new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1));
+  };
+
+  const closeCalendar = () => {
+    setActiveDateField(null);
   };
 
   const handleSubmit = (event) => {
@@ -139,20 +181,29 @@ export const SearchCapsule = () => {
     setSearchCriteria((current) => {
       if (field === 'arrive') {
         const departDate = current.departDate ? new Date(`${current.departDate}T00:00:00`) : null;
+        const nextDepartDate = departDate && isAfterDay(departDate, date) ? current.departDate : '';
+
         return {
           ...current,
           arriveDate: value,
-          departDate: departDate && isBeforeDay(departDate, date) ? current.departDate : current.departDate
+          departDate: nextDepartDate
+        };
+      }
+
+      if (!current.arriveDate) {
+        return {
+          ...current,
+          arriveDate: value,
+          departDate: ''
         };
       }
 
       const arriveDate = current.arriveDate ? new Date(`${current.arriveDate}T00:00:00`) : null;
-      if (arriveDate && isAfterDay(date, arriveDate)) {
-        return { ...current, departDate: value };
-      }
-
-      if (arriveDate && isBeforeDay(date, arriveDate)) {
-        return { ...current, arriveDate: value, departDate: '' };
+      if (arriveDate && (isSameDay(date, arriveDate) || isBeforeDay(date, arriveDate))) {
+        return {
+          ...current,
+          departDate: ''
+        };
       }
 
       return { ...current, departDate: value };
@@ -160,12 +211,22 @@ export const SearchCapsule = () => {
 
     if (field === 'arrive') {
       setActiveDateField('depart');
+      const nextMonth = isSameDay(date, startOfDay(new Date())) ? date : new Date(date.getFullYear(), date.getMonth(), 1);
+      setCalendarMonth(nextMonth);
+      return;
+    }
+
+    const arriveDate = searchCriteria.arriveDate ? new Date(`${searchCriteria.arriveDate}T00:00:00`) : null;
+    if (!arriveDate || isSameDay(date, arriveDate) || isBeforeDay(date, arriveDate)) {
+      setActiveDateField('depart');
       setCalendarMonth(new Date(date.getFullYear(), date.getMonth(), 1));
       return;
     }
 
-    setActiveDateField(null);
+    closeCalendar();
   };
+
+  const hasValidRange = searchCriteria.arriveDate && searchCriteria.departDate && isAfterDay(new Date(`${searchCriteria.departDate}T00:00:00`), new Date(`${searchCriteria.arriveDate}T00:00:00`));
 
   const renderCalendarPopover = (field) => {
     if (activeDateField !== field) {
@@ -258,7 +319,7 @@ export const SearchCapsule = () => {
 
         {destinationOpen ? (
           <div className="absolute top-full left-0 mt-3 w-80 bg-white rounded-2xl shadow-2xl border border-slate-100 p-2 z-50">
-            {DESTINATION_OPTIONS.map((option) => (
+            {projectOptions.map((option) => (
               <button
                 key={option}
                 type="button"
@@ -272,34 +333,41 @@ export const SearchCapsule = () => {
                 <span className="text-brand/40">→</span>
               </button>
             ))}
+            {projectOptions.length === 0 ? (
+              <p className="px-4 py-3 text-sm text-slate-400">No projects available yet.</p>
+            ) : null}
           </div>
         ) : null}
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <button
-          type="button"
-          onClick={() => openCalendar('arrive')}
-          className="relative flex flex-col rounded-2xl border border-slate-100 bg-slate-50 px-5 py-4 text-left transition-colors duration-200 ease-in-out hover:bg-slate-50/80 cursor-pointer min-w-0"
-        >
-          <span className="text-[11px] font-bold tracking-wider text-slate-400 uppercase">ARRIVE DATE</span>
-          <span className={searchCriteria.arriveDate ? 'mt-1 truncate text-sm font-medium text-slate-700' : 'mt-1 truncate text-sm font-medium text-slate-400'}>
-            {formatDateLabel(searchCriteria.arriveDate)}
-          </span>
+        <div className="relative min-w-0">
+          <button
+            type="button"
+            onClick={() => openCalendar('arrive')}
+            className="flex w-full flex-col rounded-2xl border border-slate-100 bg-slate-50 px-5 py-4 text-left transition-colors duration-200 ease-in-out hover:bg-slate-50/80 cursor-pointer min-w-0"
+          >
+            <span className="text-[11px] font-bold tracking-wider text-slate-400 uppercase">ARRIVE DATE</span>
+            <span className={searchCriteria.arriveDate ? 'mt-1 truncate text-sm font-medium text-slate-700' : 'mt-1 truncate text-sm font-medium text-slate-400'}>
+              {formatCalendarDayLabel(searchCriteria.arriveDate)}
+            </span>
+          </button>
           {renderCalendarPopover('arrive')}
-        </button>
+        </div>
 
-        <button
-          type="button"
-          onClick={() => openCalendar('depart')}
-          className="relative flex flex-col rounded-2xl border border-slate-100 bg-slate-50 px-5 py-4 text-left transition-colors duration-200 ease-in-out hover:bg-slate-50/80 cursor-pointer min-w-0"
-        >
-          <span className="text-[11px] font-bold tracking-wider text-slate-400 uppercase">DEPART DATE</span>
-          <span className={searchCriteria.departDate ? 'mt-1 truncate text-sm font-medium text-slate-700' : 'mt-1 truncate text-sm font-medium text-slate-400'}>
-            {formatDateLabel(searchCriteria.departDate)}
-          </span>
+        <div className="relative min-w-0">
+          <button
+            type="button"
+            onClick={() => openCalendar('depart')}
+            className="flex w-full flex-col rounded-2xl border border-slate-100 bg-slate-50 px-5 py-4 text-left transition-colors duration-200 ease-in-out hover:bg-slate-50/80 cursor-pointer min-w-0"
+          >
+            <span className="text-[11px] font-bold tracking-wider text-slate-400 uppercase">DEPART DATE</span>
+            <span className={searchCriteria.departDate ? 'mt-1 truncate text-sm font-medium text-slate-700' : 'mt-1 truncate text-sm font-medium text-slate-400'}>
+              {formatCalendarDayLabel(searchCriteria.departDate)}
+            </span>
+          </button>
           {renderCalendarPopover('depart')}
-        </button>
+        </div>
       </div>
 
       <div className="relative">
@@ -313,7 +381,7 @@ export const SearchCapsule = () => {
           className="flex w-full flex-col gap-2 rounded-2xl border border-slate-100 bg-slate-50 px-5 py-4 text-left transition-colors duration-200 ease-in-out hover:bg-slate-50/80 cursor-pointer"
         >
           <span className="text-[11px] font-bold tracking-wider text-slate-400 uppercase">GUESTS</span>
-          <span className="truncate text-sm font-medium text-slate-700">{searchCriteria.guests} guests</span>
+          <span className="truncate text-sm font-medium text-slate-700">{searchCriteria.guests}  Guests</span>
         </button>
 
         {guestOpen ? (
@@ -341,7 +409,8 @@ export const SearchCapsule = () => {
 
       <button
         type="submit"
-        className="w-full bg-[#283f5e] text-white font-bold py-4 rounded-xl text-xs tracking-widest uppercase hover:bg-[#1e3047] transition-all duration-300 ease-out hover:shadow-lg hover:shadow-slate-900/20 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]"
+        disabled={searchCriteria.arriveDate && searchCriteria.departDate ? !hasValidRange : false}
+        className="w-full bg-[#283f5e] text-white font-bold py-4 rounded-xl text-xs tracking-widest uppercase hover:bg-[#1e3047] transition-all duration-300 ease-out hover:shadow-lg hover:shadow-slate-900/20 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
       >
         Search Stays
       </button>

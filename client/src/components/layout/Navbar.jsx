@@ -48,7 +48,6 @@ export const Navbar = () => {
           ) : (
             <div className="hidden items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm tracking-[0.12em] text-brand md:flex">
               <span className="font-semibold uppercase">{user?.name || user?.email}</span>
-              <span className="text-brand/60">{user?.role}</span>
               <button type="button" onClick={logout} className="ml-2 uppercase tracking-[0.16em] text-brand/70">
                 Logout
               </button>

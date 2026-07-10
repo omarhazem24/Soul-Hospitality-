@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import {
   clearStoredAuth,
+  fetchCurrentUser,
   getStoredAuth,
   loginRequest,
   persistAuth,
@@ -28,6 +29,43 @@ export const AuthProvider = ({ children }) => {
     setAuthToken(authState.token);
   }, [authState.token]);
 
+  useEffect(() => {
+    let active = true;
+
+    const refreshSession = async () => {
+      if (!authState.token) {
+        return;
+      }
+
+      try {
+        const sessionUser = await fetchCurrentUser();
+        if (!active || !sessionUser) {
+          return;
+        }
+
+        const nextState = {
+          token: authState.token,
+          user: sessionUser
+        };
+
+        setAuthState(nextState);
+        persistAuth(nextState);
+      } catch {
+        if (active) {
+          setAuthState({ user: null, token: null });
+          setAuthToken(null);
+          clearStoredAuth();
+        }
+      }
+    };
+
+    refreshSession();
+
+    return () => {
+      active = false;
+    };
+  }, [authState.token]);
+
   const login = async ({ email, password }) => {
     const payload = await loginRequest({ identifier: email, password });
     const nextState = {
@@ -36,8 +74,11 @@ export const AuthProvider = ({ children }) => {
         _id: payload._id,
         name: payload.name,
         email: payload.email,
-        username: payload.username,
-        role: payload.role
+        role: payload.role,
+        staffId: payload.staffId || null,
+        uniqueSalesId: payload.uniqueSalesId || null,
+        isFirstLogin: Boolean(payload.isFirstLogin),
+        forcePasswordChange: Boolean(payload.forcePasswordChange)
       }
     };
 
@@ -56,8 +97,10 @@ export const AuthProvider = ({ children }) => {
         _id: payload._id,
         name: payload.name,
         email: payload.email,
-        username: payload.username,
-        role: payload.role
+        role: payload.role,
+        staffId: payload.staffId || null,
+        uniqueSalesId: payload.uniqueSalesId || null,
+        isFirstLogin: Boolean(payload.isFirstLogin)
       }
     };
 
@@ -74,6 +117,21 @@ export const AuthProvider = ({ children }) => {
     clearStoredAuth();
   };
 
+  const updateSessionUser = (sessionUser) => {
+    if (!sessionUser) {
+      return;
+    }
+
+    const nextState = {
+      token: authState.token,
+      user: sessionUser
+    };
+
+    setAuthState(nextState);
+    setAuthToken(nextState.token);
+    persistAuth(nextState);
+  };
+
   const value = useMemo(
     () => ({
       user: authState.user,
@@ -81,7 +139,8 @@ export const AuthProvider = ({ children }) => {
       isAuthenticated: Boolean(authState.token),
       login,
       register,
-      logout
+      logout,
+      updateSessionUser
     }),
     [authState.token, authState.user]
   );

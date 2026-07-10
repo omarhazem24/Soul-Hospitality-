@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { fetchAdminBookingRequests, fetchAdminUnits } from '../api/http.js';
-import { ReservationModal } from '../components/admin/ReservationModal.jsx';
 
 const getMonthDays = (date) => {
   const start = new Date(date.getFullYear(), date.getMonth(), 1);
@@ -15,14 +14,23 @@ const isBooked = (booking, cellDate) => {
   return current >= new Date(start.getFullYear(), start.getMonth(), start.getDate()) && current < new Date(end.getFullYear(), end.getMonth(), end.getDate());
 };
 
+const isLockedStatus = (status) => {
+  const normalized = String(status || '').toLowerCase();
+  return normalized === 'pending' || normalized === 'accepted';
+};
+
+const lockStatusClass = (status) => {
+  const normalized = String(status || '').toLowerCase();
+  if (normalized === 'accepted') return 'admin-pill admin-pill-accepted';
+  if (normalized === 'pending') return 'admin-pill admin-pill-pending';
+  return 'admin-pill border-slate-200 bg-slate-100 text-slate-600';
+};
+
 export const AdminSchedule = () => {
   const [units, setUnits] = useState([]);
   const [reservations, setReservations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [selectedUnitId, setSelectedUnitId] = useState('');
-  const [selectedDate, setSelectedDate] = useState(null);
-  const [showModal, setShowModal] = useState(false);
   const monthDate = useMemo(() => new Date(), []);
   const monthDays = useMemo(() => getMonthDays(monthDate), [monthDate]);
 
@@ -45,16 +53,14 @@ export const AdminSchedule = () => {
     loadData();
   }, []);
 
-  const openReservation = (unitId, date) => {
-    setSelectedUnitId(unitId);
-    setSelectedDate(date);
-    setShowModal(true);
-  };
-
   const getCellState = (unit, day) => {
-    const booking = reservations.find((item) => String(item.unit?._id || item.unitId || item.unit) === String(unit._id) && isBooked(item, day));
+    const booking = reservations.find((item) => (
+      String(item.unit?._id || item.unitId || item.unit) === String(unit._id)
+      && isLockedStatus(item.status)
+      && isBooked(item, day)
+    ));
     if (booking) {
-      return booking.status || 'confirmed';
+      return booking.status || 'Pending';
     }
     return null;
   };
@@ -63,16 +69,16 @@ export const AdminSchedule = () => {
     <div className="space-y-6">
       <div>
         <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-400">Schedule</p>
-        <h1 className="mt-2 text-3xl font-bold text-[#283f5e]">Reservation Calendar</h1>
-        <p className="mt-1 text-sm text-slate-500">June 2026 · Click empty cell to edit price</p>
+        <h1 className="mt-2 text-3xl font-bold text-[#283f5e]">Reservation Calendar (Read Only)</h1>
+        <p className="mt-1 text-sm text-slate-500">Current month occupancy map. Editing is restricted to Sales portal.</p>
       </div>
 
-      {loading ? <div className="rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-500 shadow-sm">Loading schedule...</div> : null}
-      {error ? <div className="rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-500 shadow-sm">{error}</div> : null}
+      {loading ? <div className="admin-card p-6 text-sm text-slate-500">Loading schedule...</div> : null}
+      {error ? <div className="admin-card p-6 text-sm text-slate-500">{error}</div> : null}
 
-      <div className="overflow-x-auto rounded-3xl border border-slate-200 bg-white shadow-sm">
+      <div className="admin-table-wrap overflow-x-auto">
         <div className="min-w-[1100px]">
-          <div className="grid grid-cols-[260px_repeat(31,1fr)] border-b border-slate-200 bg-slate-50 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+          <div className="grid grid-cols-[260px_repeat(31,1fr)] border-b border-slate-200 admin-table-head">
             <div className="sticky left-0 z-10 bg-slate-50 px-4 py-4">Unit</div>
             {monthDays.map((day) => (
               <div key={day.toISOString()} className={`px-2 py-4 text-center ${day.getDay() === 0 || day.getDay() === 6 ? 'bg-amber-50' : ''}`}>
@@ -91,31 +97,18 @@ export const AdminSchedule = () => {
               {monthDays.map((day) => {
                 const state = getCellState(unit, day);
                 return (
-                  <button
+                  <div
                     key={day.toISOString()}
-                    type="button"
-                    onClick={() => openReservation(unit._id, day)}
-                    className={`border-l border-slate-100 px-1 py-4 text-[10px] font-semibold transition-colors ${state ? 'bg-[#283f5e] text-white' : 'hover:bg-slate-50'} ${day.getDay() === 0 || day.getDay() === 6 ? 'bg-amber-50/70' : ''}`}
+                    className={`border-l border-slate-100 px-1 py-4 text-center text-[10px] font-semibold ${state ? 'bg-[#283f5e] text-white' : 'text-slate-500'} ${day.getDay() === 0 || day.getDay() === 6 ? 'bg-amber-50/70' : ''}`}
                   >
-                    {state ? state : 'Open'}
-                  </button>
+                    {state ? <span className={lockStatusClass(state)}>{state}</span> : 'Open'}
+                  </div>
                 );
               })}
             </div>
           ))}
         </div>
       </div>
-
-      {showModal ? (
-        <ReservationModal
-          open={showModal}
-          onClose={() => setShowModal(false)}
-          onSaved={loadData}
-          units={units}
-          selectedUnitId={selectedUnitId}
-          selectedDate={selectedDate}
-        />
-      ) : null}
     </div>
   );
 };

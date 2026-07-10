@@ -7,6 +7,8 @@ const overlapFilter = (checkInDate, checkOutDate) => ({
   endDate: { $gt: checkInDate }
 });
 
+const LOCKED_STATUSES = ACTIVE_BOOKING_STATUSES;
+
 export const findAvailableUnits = async ({
   destination,
   checkInDate,
@@ -36,7 +38,7 @@ export const findAvailableUnits = async ({
 
   if (checkInDate && checkOutDate) {
     const bookedUnitIds = await Booking.distinct('unit', {
-      status: { $in: ACTIVE_BOOKING_STATUSES },
+      status: { $in: LOCKED_STATUSES },
       ...overlapFilter(checkInDate, checkOutDate)
     });
 

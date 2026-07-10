@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext.jsx';
 
 export const AdminProfile = () => {
   const { user } = useAuth();
+  const displayName = user?.name || user?.email || 'Account';
 
   return (
     <div className="space-y-6">
@@ -12,9 +13,9 @@ export const AdminProfile = () => {
       </div>
 
       <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-        <p className="text-sm text-slate-500">{user?.name || 'Saif Magdy'}</p>
+        <p className="text-sm text-slate-500">{displayName}</p>
         <p className="mt-2 text-sm text-slate-500">{user?.email}</p>
-        <p className="mt-2 text-sm text-slate-500">Role: {user?.role}</p>
+        <p className="mt-2 text-sm text-slate-500">Role: {user?.role || 'Unknown'}</p>
       </div>
     </div>
   );

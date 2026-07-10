@@ -25,13 +25,21 @@ export default function UnitsListPage() {
   return (
     <div className="grid" style={{ gap: 18 }}>
       <h3 className="section-title">Units List</h3>
-      <div className="grid cards">
+      <div className="grid cards" style={{ gap: 32, gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))' }}>
         {units.map((unit) => (
-          <article className="card" key={unit.title}>
-            <span className="badge">{unit.badge}</span>
-            <h4 style={{ margin: '12px 0 8px' }}>{unit.title}</h4>
-            <p className="helper">{unit.destination}</p>
-            <strong style={{ display: 'block', marginTop: 14 }}>{unit.price}</strong>
+          <article
+            className="card"
+            key={unit.title}
+            style={{
+              padding: '42px',
+              minHeight: '520px',
+              borderRadius: '28px'
+            }}
+          >
+            <span className="badge" style={{ padding: '14px 20px', fontSize: '1rem' }}>{unit.badge}</span>
+            <h4 style={{ margin: '28px 0 16px', fontSize: '2rem', lineHeight: 1.15 }}>{unit.title}</h4>
+            <p className="helper" style={{ fontSize: '1.2rem' }}>{unit.destination}</p>
+            <strong style={{ display: 'block', marginTop: 30, fontSize: '1.55rem' }}>{unit.price}</strong>
           </article>
         ))}
       </div>

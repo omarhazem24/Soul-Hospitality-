@@ -1,47 +1,51 @@
 import mongoose from 'mongoose';
 
-const applicationSchema = new mongoose.Schema(
-  {
-    fullName: {
-      type: String,
-      required: true,
-      trim: true
-    },
-    email: {
-      type: String,
-      required: true,
-      trim: true,
-      lowercase: true
-    },
-    phone: {
-      type: String,
-      required: true,
-      trim: true
-    },
-    position: {
-      type: String,
-      required: true,
-      trim: true
-    },
-    resumeUrl: {
-      type: String,
-      required: true
-    },
-    coverLetter: {
-      type: String,
-      trim: true,
-      default: ''
-    },
-    status: {
-      type: String,
-      enum: ['pending', 'reviewed', 'rejected'],
-      default: 'pending',
-      index: true
-    },
+const applicationSchema = new mongoose.Schema({
+  applicationId: {
+    type: String,
+    required: true,
+    unique: true,
+    uppercase: true,
+    match: [/^[A-Z0-9]{4}$/, 'Application ID must be a unique 4-character alphanumeric string (XXXX)']
   },
-  {
-    timestamps: true
+  jobId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Job',
+    required: true
+  },
+  fullName: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  email: {
+    type: String,
+    required: true,
+    lowercase: true,
+    trim: true
+  },
+  phone: {
+    type: String,
+    required: true
+  },
+  cvUrl: {
+    type: String,
+    required: true
+  },
+  status: {
+    type: String,
+    enum: ['Pending', 'Reviewed', 'Shortlisted', 'Rejected'],
+    default: 'Pending'
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+    expires: 2592000
   }
-);
+}, {
+  timestamps: true,
+  id: false
+});
 
-export const Application = mongoose.model('Application', applicationSchema);
+const Application = mongoose.model('Application', applicationSchema);
+export default Application;

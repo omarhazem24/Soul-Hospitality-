@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken';
+import { User } from '../models/User.js';
 import { AppError } from '../utils/AppError.js';
 
 export const protect = (request, response, next) => {
@@ -34,5 +35,26 @@ export const restrictTo = (...allowedRoles) => (request, response, next) => {
   return next();
 };
 
+export const requireStaffPasswordChange = async (request, response, next) => {
+  try {
+    const userId = request.user?.id || request.user?.userId || request.user?._id;
+
+    if (!userId) {
+      return next(new AppError('Authentication required', 401));
+    }
+
+    const user = await User.findById(userId).select('role isFirstLogin');
+
+    if (['Sales', 'Admin'].includes(user?.role) && user.isFirstLogin && !String(request.path || '').includes('/change-password')) {
+      return next(new AppError('Password change required before continuing', 423));
+    }
+
+    return next();
+  } catch (error) {
+    return next(error);
+  }
+};
+
 export const requireAuth = protect;
 export const requireAdmin = restrictTo('primary_admin');
+export const requireSalesPasswordChange = requireStaffPasswordChange;

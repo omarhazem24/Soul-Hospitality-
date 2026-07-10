@@ -1,9 +1,36 @@
 import React from 'react';
+import { fetchProjectNames } from '../../api/http.js';
 
-const destinations = ['North Coast', 'Sheikh Zayed', 'New Cairo', 'Giza'];
 const unitTypes = ['Chalet', 'Penthouse', 'Apartment'];
 
 export const SearchFilterBar = () => {
+  const [destinations, setDestinations] = React.useState([]);
+
+  React.useEffect(() => {
+    let mounted = true;
+
+    const loadProjects = async () => {
+      try {
+        const payload = await fetchProjectNames();
+        const nextProjects = Array.isArray(payload) ? payload : [];
+
+        if (mounted) {
+          setDestinations(nextProjects);
+        }
+      } catch {
+        if (mounted) {
+          setDestinations([]);
+        }
+      }
+    };
+
+    loadProjects();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   return (
     <div className="page-container relative -mt-10 pb-4">
       <div className="surface-card grid gap-4 p-4 shadow-luxury lg:grid-cols-[1.2fr_1fr_0.8fr_0.6fr] lg:items-end">

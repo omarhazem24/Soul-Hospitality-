@@ -1,8 +1,9 @@
 import { Router } from 'express';
-import { listAvailableUnits } from '../controllers/unitController.js';
+import { getFilteredUnits, getUnitByIdentifier } from '../controllers/unitController.js';
 
 const unitRouter = Router();
 
-unitRouter.get('/', listAvailableUnits);
+unitRouter.get('/', getFilteredUnits);
+unitRouter.get('/:id', getUnitByIdentifier);
 
 export { unitRouter };

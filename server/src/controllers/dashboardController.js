@@ -1,144 +1,193 @@
 import { Booking } from '../models/Booking.js';
 import Unit from '../models/Unit.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
+import { SALES_COMMISSION_RATE, WEBSITE_COMMISSION_RATE } from '../utils/bookingCommission.js';
 
-const getDateBounds = ({ year, month }) => {
-  const resolvedYear = Number(year) || new Date().getFullYear();
-  const resolvedMonth = month ? Number(month) : null;
-
-  if (resolvedMonth) {
-    const start = new Date(resolvedYear, resolvedMonth - 1, 1);
-    const end = new Date(resolvedYear, resolvedMonth, 1);
-    return { start, end, resolvedYear, resolvedMonth };
-  }
-
-  const start = new Date(resolvedYear, 0, 1);
-  const end = new Date(resolvedYear + 1, 0, 1);
-  return { start, end, resolvedYear, resolvedMonth };
+const currentMonthBounds = () => {
+  const now = new Date();
+  return {
+    start: new Date(now.getFullYear(), now.getMonth(), 1),
+    end: new Date(now.getFullYear(), now.getMonth() + 1, 1)
+  };
 };
 
-const activeStatuses = ['temporary_hold', 'pending', 'approved', 'confirmed'];
+export const getDashboardSummary = asyncHandler(async (_request, response) => {
+  const { start, end } = currentMonthBounds();
 
-const normalizeProjectName = (value) => String(value || 'Unassigned').trim();
-
-const startOfDay = (date) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
-
-const endOfDay = (date) => new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1);
-
-export const getDashboardSummary = asyncHandler(async (request, response) => {
-  const { start, end, resolvedYear, resolvedMonth } = getDateBounds(request.query);
-  const today = new Date();
-  const todayStart = startOfDay(today);
-  const todayEnd = endOfDay(today);
-
-  const [units, reservations, checkInsToday, checkOutsToday] = await Promise.all([
-    Unit.find().lean(),
-    Booking.find().populate('unit', 'projectName status').lean(),
-    Booking.countDocuments({ startDate: { $gte: todayStart, $lt: todayEnd }, status: { $in: activeStatuses } }),
-    Booking.countDocuments({ endDate: { $gte: todayStart, $lt: todayEnd }, status: { $in: activeStatuses } })
+  const [
+    totalUnitsInventoryCount,
+    checkInsRows,
+    checkOutsRows,
+    totalRevenueRows,
+    pendingRevenueRows,
+    totalMonthlyReservationsRows
+  ] = await Promise.all([
+    Unit.countDocuments({}),
+    Booking.aggregate([
+      { $match: { status: 'Accepted', startDate: { $gte: start, $lt: end } } },
+      { $group: { _id: null, count: { $sum: 1 } } },
+      { $project: { _id: 0, count: 1 } }
+    ]),
+    Booking.aggregate([
+      { $match: { status: 'Accepted', endDate: { $gte: start, $lt: end } } },
+      { $group: { _id: null, count: { $sum: 1 } } },
+      { $project: { _id: 0, count: 1 } }
+    ]),
+    Booking.aggregate([
+      { $match: { status: 'Accepted', createdAt: { $gte: start, $lt: end } } },
+      { $group: { _id: null, total: { $sum: { $ifNull: ['$totalPrice', 0] } } } },
+      { $project: { _id: 0, total: 1 } }
+    ]),
+    Booking.aggregate([
+      { $match: { status: 'Pending', createdAt: { $gte: start, $lt: end } } },
+      { $group: { _id: null, total: { $sum: { $ifNull: ['$totalPrice', 0] } } } },
+      { $project: { _id: 0, total: 1 } }
+    ]),
+    Booking.aggregate([
+      { $match: { status: 'Accepted', createdAt: { $gte: start, $lt: end } } },
+      { $group: { _id: null, count: { $sum: 1 } } },
+      { $project: { _id: 0, count: 1 } }
+    ])
   ]);
-
-  const totalUnits = units.length;
-  const totalReservations = reservations.length;
-
-  const unitsByProject = units.reduce((accumulator, unit) => {
-    const projectName = normalizeProjectName(unit.projectName || unit.location);
-    if (!accumulator[projectName]) {
-      accumulator[projectName] = [];
-    }
-
-    accumulator[projectName].push(unit);
-    return accumulator;
-  }, {});
-
-  const reservationsByProject = reservations.reduce((accumulator, booking) => {
-    const projectName = normalizeProjectName(booking.unit?.projectName || booking.unit?.location || 'Unassigned');
-    if (!accumulator[projectName]) {
-      accumulator[projectName] = [];
-    }
-
-    accumulator[projectName].push(booking);
-    return accumulator;
-  }, {});
-
-  const occupancyByProject = Object.entries(unitsByProject)
-    .map(([projectName, projectUnits]) => {
-      const projectReservations = reservationsByProject[projectName] || [];
-      const occupiedNow = projectReservations.filter((booking) => booking.status !== 'cancelled' && booking.status !== 'rejected' && new Date(booking.startDate) < todayEnd && new Date(booking.endDate) >= todayStart).length;
-
-      return {
-        projectName,
-        totalUnits: projectUnits.length,
-        totalReservations: projectReservations.length,
-        occupiedNow,
-        occupancyPercent: projectUnits.length > 0 ? Math.round((occupiedNow / projectUnits.length) * 100) : 0
-      };
-    })
-    .sort((left, right) => right.totalUnits - left.totalUnits);
-
-  const monthReservations = reservations.filter((booking) => {
-    const bookingDate = new Date(booking.createdAt || booking.startDate);
-    return bookingDate >= start && bookingDate < end;
-  });
-
-  const annualReservations = reservations.reduce((accumulator, booking) => {
-    const bookingYear = new Date(booking.createdAt || booking.startDate).getFullYear();
-    const row = accumulator.find((item) => item._id.year === bookingYear);
-
-    if (row) {
-      row.totalBookings += 1;
-      row.revenue += Number(booking.totalPrice || 0);
-      return accumulator;
-    }
-
-    accumulator.push({ _id: { year: bookingYear }, totalBookings: 1, revenue: Number(booking.totalPrice || 0) });
-    return accumulator;
-  }, []);
-
-  const monthlyRentals = monthReservations.reduce((accumulator, booking) => {
-    const bookingMonth = new Date(booking.createdAt || booking.startDate);
-    const key = `${bookingMonth.getFullYear()}-${bookingMonth.getMonth() + 1}`;
-    const row = accumulator.find((item) => item._id.year === bookingMonth.getFullYear() && item._id.month === bookingMonth.getMonth() + 1);
-
-    if (row) {
-      row.totalBookings += 1;
-      row.revenue += Number(booking.totalPrice || 0);
-      return accumulator;
-    }
-
-    accumulator.push({ _id: { year: bookingMonth.getFullYear(), month: bookingMonth.getMonth() + 1 }, totalBookings: 1, revenue: Number(booking.totalPrice || 0), key });
-    return accumulator;
-  }, []);
-
-  const financialSummary = reservations
-    .filter((booking) => {
-      const bookingDate = new Date(booking.createdAt || booking.startDate);
-      return bookingDate >= start && bookingDate < end && booking.status === 'confirmed';
-    })
-    .reduce(
-      (summary, booking) => {
-        summary.totalBookings += 1;
-        summary.totalRevenue += Number(booking.totalPrice || 0);
-        return summary;
-      },
-      { totalBookings: 0, totalRevenue: 0 }
-    );
 
   response.json({
     success: true,
     data: {
-      period: {
-        year: resolvedYear,
-        month: resolvedMonth
+      totalUnitsInventoryCount,
+      checkInsCount: checkInsRows[0]?.count || 0,
+      checkOutsCount: checkOutsRows[0]?.count || 0,
+      totalRevenueCurrentMonth: totalRevenueRows[0]?.total || 0,
+      pendingPaymentsCurrentMonth: pendingRevenueRows[0]?.total || 0,
+      totalMonthlyReservations: totalMonthlyReservationsRows[0]?.count || 0
+    }
+  });
+});
+
+export const getAdminCommissionsSummary = asyncHandler(async (_request, response) => {
+  const { start, end } = currentMonthBounds();
+
+  const [leaderboardRows, websiteCommissionRows] = await Promise.all([
+    Booking.aggregate([
+      {
+        $match: {
+          status: 'Accepted',
+          assignedSalesPersonId: { $ne: null }
+        }
       },
-      totalUnits,
-      totalReservations,
-      checkInsToday,
-      checkOutsToday,
-      occupancyByProject,
-      monthlyRentals,
-      annualRentals,
-      financialSummary
+      {
+        $addFields: {
+          effectiveAcceptedAt: { $ifNull: ['$acceptedAt', '$updatedAt'] }
+        }
+      },
+      {
+        $match: {
+          effectiveAcceptedAt: { $gte: start, $lt: end }
+        }
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'assignedSalesPersonId',
+          foreignField: '_id',
+          as: 'salesPerson'
+        }
+      },
+      { $unwind: '$salesPerson' },
+      { $match: { 'salesPerson.role': 'Sales' } },
+      {
+        $group: {
+          _id: '$assignedSalesPersonId',
+          name: { $first: '$salesPerson.name' },
+          uniqueSalesId: { $first: '$salesPerson.uniqueSalesId' },
+          manualSalesReservations: {
+            $sum: {
+              $cond: [{ $eq: ['$isSalesCreated', true] }, 1, 0]
+            }
+          },
+          organicCustomerReservations: {
+            $sum: {
+              $cond: [
+                {
+                  $and: [
+                    { $ne: ['$isSalesCreated', true] },
+                    { $ne: ['$isAdminCreated', true] }
+                  ]
+                },
+                1,
+                0
+              ]
+            }
+          },
+          commissionAmount: {
+            $sum: {
+              $cond: [
+                {
+                  $and: [
+                    { $eq: ['$status', 'Accepted'] },
+                    { $ne: ['$assignedSalesPersonId', null] }
+                  ]
+                },
+                { $multiply: [{ $ifNull: ['$totalPrice', 0] }, SALES_COMMISSION_RATE / 100] },
+                0
+              ]
+            }
+          }
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          salesPersonId: '$_id',
+          name: 1,
+          uniqueSalesId: 1,
+          manualSalesReservations: 1,
+          organicCustomerReservations: 1,
+          totalMonthlyReservations: {
+            $add: ['$manualSalesReservations', '$organicCustomerReservations']
+          },
+          commissionAmount: 1
+        }
+      },
+      { $sort: { totalMonthlyReservations: -1, manualSalesReservations: -1, organicCustomerReservations: -1, name: 1 } }
+    ]),
+    Booking.aggregate([
+      {
+        $match: {
+          status: 'Accepted',
+          isSalesCreated: { $ne: true },
+          isAdminCreated: { $ne: true }
+        }
+      },
+      {
+        $addFields: {
+          effectiveAcceptedAt: { $ifNull: ['$acceptedAt', '$updatedAt'] }
+        }
+      },
+      {
+        $match: {
+          effectiveAcceptedAt: { $gte: start, $lt: end }
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          systemWebsiteCommission: {
+            $sum: { $multiply: [{ $ifNull: ['$totalPrice', 0] }, WEBSITE_COMMISSION_RATE / 100] }
+          }
+        }
+      },
+      { $project: { _id: 0, systemWebsiteCommission: 1 } }
+    ])
+  ]);
+
+  const salesAgentsCombinedCommissions = leaderboardRows.reduce((sum, row) => sum + Number(row.commissionAmount || 0), 0);
+
+  response.json({
+    success: true,
+    data: {
+      salesAgentsCombinedCommissions,
+      systemWebsiteCommission: websiteCommissionRows[0]?.systemWebsiteCommission || 0,
+      leaderboard: leaderboardRows
     }
   });
 });
