@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { BrandWordmark } from './BrandWordmark.jsx';
@@ -11,6 +11,30 @@ const navLinkClass = ({ isActive }) =>
 
 export const Navbar = () => {
   const { isAuthenticated, user, logout } = useAuth();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const handleEscape = (event) => {
+      if (event.key === 'Escape') {
+        setIsMobileMenuOpen(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleEscape);
+    return () => {
+      window.removeEventListener('keydown', handleEscape);
+    };
+  }, []);
+
+  useEffect(() => {
+    document.body.style.overflow = isMobileMenuOpen ? 'hidden' : '';
+
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isMobileMenuOpen]);
+
+  const closeMobileMenu = () => setIsMobileMenuOpen(false);
 
   return (
     <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur-md">
@@ -38,9 +62,20 @@ export const Navbar = () => {
         </nav>
 
         <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setIsMobileMenuOpen((current) => !current)}
+            className="inline-flex items-center rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-brand lg:hidden"
+            aria-expanded={isMobileMenuOpen}
+            aria-label="Toggle mobile navigation"
+          >
+            {isMobileMenuOpen ? 'Close' : 'Menu'}
+          </button>
+
           {!isAuthenticated ? (
             <Link
               to="/login"
+              onClick={closeMobileMenu}
               className="rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold uppercase tracking-[0.16em] text-brand no-underline transition-all duration-300 ease-out hover:bg-[#283f5e] hover:text-white hover:border-[#283f5e] hover:shadow-lg hover:shadow-slate-900/15 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]"
             >
               Login
@@ -56,6 +91,51 @@ export const Navbar = () => {
 
         </div>
       </div>
+
+      {isMobileMenuOpen ? (
+        <>
+          <button
+            type="button"
+            aria-label="Close mobile navigation"
+            className="fixed inset-0 z-40 bg-slate-900/25 lg:hidden"
+            onClick={closeMobileMenu}
+          />
+          <div className="page-container relative z-50 pb-6 lg:hidden">
+            <nav className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xl shadow-slate-900/10">
+              <div className="flex flex-col gap-3">
+                <NavLink to="/" end className={navLinkClass} onClick={closeMobileMenu}>
+                  Home
+                </NavLink>
+                <NavLink to="/units" className={navLinkClass} onClick={closeMobileMenu}>
+                  Properties
+                </NavLink>
+                <NavLink to="/about-soul" className={navLinkClass} onClick={closeMobileMenu}>
+                  About Soul
+                </NavLink>
+                <NavLink to="/faq" className={navLinkClass} onClick={closeMobileMenu}>
+                  FAQ
+                </NavLink>
+                <NavLink to="/become-a-host" className={navLinkClass} onClick={closeMobileMenu}>
+                  Become a Host
+                </NavLink>
+
+                {isAuthenticated ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      logout();
+                      closeMobileMenu();
+                    }}
+                    className="mt-2 rounded-full border border-slate-200 px-4 py-2 text-left text-xs font-semibold uppercase tracking-[0.16em] text-brand"
+                  >
+                    Logout
+                  </button>
+                ) : null}
+              </div>
+            </nav>
+          </div>
+        </>
+      ) : null}
     </header>
   );
 };
