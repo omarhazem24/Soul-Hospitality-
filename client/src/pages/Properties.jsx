@@ -241,9 +241,11 @@ export const Properties = () => {
 
   useEffect(() => {
     document.body.style.overflow = isMobileFiltersOpen ? 'hidden' : '';
+    window.dispatchEvent(new CustomEvent('properties-filters-toggle', { detail: { open: isMobileFiltersOpen } }));
 
     return () => {
       document.body.style.overflow = '';
+      window.dispatchEvent(new CustomEvent('properties-filters-toggle', { detail: { open: false } }));
     };
   }, [isMobileFiltersOpen]);
 
@@ -334,29 +336,6 @@ export const Properties = () => {
 
   return (
     <main className="bg-[#f8fafc]">
-      {/* 
-        Fixed Static WhatsApp Button:
-        On screens below 'lg' (mobile), it respects 'isMobileFiltersOpen' and goes display: none ('hidden').
-        On screens 'lg' and up (desktop), it always stays visible ('lg:flex').
-      */}
-      <div 
-        className={`fixed bottom-5 right-5 z-50 select-none transition-all duration-200 ${
-          isMobileFiltersOpen ? 'hidden lg:flex' : 'flex'
-        }`}
-      >
-        <a
-          href="https://wa.me/201000000000" // Replace with actual company phone number
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-xl hover:bg-[#20ba5a] hover:scale-105 active:scale-95 transition-transform"
-          aria-label="Chat on WhatsApp"
-        >
-          <svg viewBox="0 0 24 24" className="h-7 w-7 fill-current">
-            <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.516 2.266 2.27 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.713-1.455L0 24zm6.59-4.846c1.62.963 3.42 1.47 5.258 1.471 5.589 0 10.134-4.542 10.137-10.13.002-2.707-1.048-5.253-2.957-7.163C17.118 1.43 14.57 0.38 11.86 0.38c-5.59 0-10.134 4.542-10.137 10.13a10.09 10.09 0 0 0 1.508 5.218L2.083 22.03l6.43-1.686z" />
-          </svg>
-        </a>
-      </div>
-      
       <section className="page-container py-6 lg:py-12 2xl:py-16 px-4 sm:px-6">
         <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="space-y-1.5">

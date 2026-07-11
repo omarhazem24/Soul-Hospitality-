@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLocation, useMatch } from 'react-router-dom';
 
 const WHATSAPP_NUMBER = '201500009344';
@@ -25,17 +25,37 @@ const buildUnitHref = () => {
 export const FloatingWhatsAppTrigger = () => {
   const location = useLocation();
   const unitDetailsMatch = useMatch('/units/:unitId');
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+
+  useEffect(() => {
+    const handleFiltersToggle = (event) => {
+      setMobileFiltersOpen(Boolean(event.detail?.open));
+    };
+
+    window.addEventListener('properties-filters-toggle', handleFiltersToggle);
+
+    return () => {
+      window.removeEventListener('properties-filters-toggle', handleFiltersToggle);
+    };
+  }, []);
 
   if (shouldHideTrigger(location.pathname)) {
     return null;
   }
 
+  const isPropertiesPage = location.pathname === '/units';
   const isUnitDetails = Boolean(unitDetailsMatch);
   const label = isUnitDetails ? 'Have an inquiry about this unit?' : 'Have a problem?';
   const href = isUnitDetails ? buildUnitHref() : buildDefaultHref();
+  const hideForMobileFilters = isPropertiesPage && mobileFiltersOpen;
 
   return (
-    <div className="fixed bottom-5 right-5 z-[70] sm:bottom-6 sm:right-6">
+    <div
+      className={[
+        'fixed bottom-5 right-5 z-[70] sm:bottom-6 sm:right-6',
+        hideForMobileFilters ? 'max-lg:hidden' : ''
+      ].join(' ')}
+    >
       <a
         href={href}
         target="_blank"
