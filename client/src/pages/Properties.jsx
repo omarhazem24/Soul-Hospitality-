@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, useRef } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Minus, Plus, RotateCcw, Search, SlidersHorizontal, X } from 'lucide-react';
 import { fetchAvailableUnits, fetchProjectNames } from '../api/http.js';
@@ -58,81 +58,15 @@ const AreaIcon = () => (
   </svg>
 );
 
-// Draggable Floating WhatsApp Component
-const DraggableWhatsApp = () => {
-  const [position, setPosition] = useState({ x: 20, y: 20 });
-  const dragRef = useRef(null);
-  const isDragging = useRef(false);
-  const dragStart = useRef({ x: 0, y: 0 });
-  const initialPos = useRef({ x: 0, y: 0 });
-  const clickPrevent = useRef(false);
-
-  const handleStart = (clientX, clientY) => {
-    isDragging.current = true;
-    clickPrevent.current = false;
-    dragStart.current = { x: clientX, y: clientY };
-    initialPos.current = { ...position };
-  };
-
-  const handleMove = (clientX, clientY) => {
-    if (!isDragging.current) return;
-    const dx = dragStart.current.x - clientX; 
-    const dy = dragStart.current.y - clientY; 
-    
-    if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
-      clickPrevent.current = true;
-    }
-
-    setPosition({
-      x: Math.max(10, Math.min(window.innerWidth - 80, initialPos.current.x + dx)),
-      y: Math.max(10, Math.min(window.innerHeight - 80, initialPos.current.y + dy))
-    });
-  };
-
-  const handleEnd = () => {
-    isDragging.current = false;
-  };
-
-  useEffect(() => {
-    const onMouseMove = (e) => handleMove(e.clientX, e.clientY);
-    const onMouseUp = () => handleEnd();
-    const onTouchMove = (e) => {
-      if (e.touches.length > 0) handleMove(e.touches[0].clientX, e.touches[0].clientY);
-    };
-    const onTouchEnd = () => handleEnd();
-
-    if (isDragging.current) {
-      window.addEventListener('mousemove', onMouseMove);
-      window.addEventListener('mouseup', onMouseUp);
-      window.addEventListener('touchmove', onTouchMove, { passive: false });
-      window.addEventListener('touchend', onTouchEnd);
-    }
-    return () => {
-      window.removeEventListener('mousemove', onMouseMove);
-      window.removeEventListener('mouseup', onMouseUp);
-      window.removeEventListener('touchmove', onTouchMove);
-      window.removeEventListener('touchend', onTouchEnd);
-    };
-  }, [position]);
-
+// Floating WhatsApp Component (Static & Toggles with Mobile Filters)
+const WhatsAppButton = ({ hideOnMobile }) => {
   return (
-    <div
-      ref={dragRef}
-      style={{ bottom: `${position.y}px`, right: `${position.x}px` }}
-      className="fixed z-50 select-none touch-none active:scale-95 transition-transform"
-      onMouseDown={(e) => handleStart(e.clientX, e.clientY)}
-      onTouchStart={(e) => handleStart(e.touches[0].clientX, e.touches[0].clientY)}
-    >
+    <div className={`fixed bottom-5 right-5 z-50 select-none transition-all duration-200 ${hideOnMobile ? 'hidden lg:flex' : 'flex'}`}>
       <a
         href="https://wa.me/201000000000" // Replace with actual company phone number
         target="_blank"
         rel="noopener noreferrer"
-        onClick={(e) => {
-          if (clickPrevent.current) {
-            e.preventDefault();
-          }
-        }}
-        className="flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-xl hover:bg-[#20ba5a] cursor-grab active:cursor-grabbing"
+        className="flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-xl hover:bg-[#20ba5a] hover:scale-105 active:scale-95 transition-transform"
         aria-label="Chat on WhatsApp"
       >
         <svg viewBox="0 0 24 24" className="h-7 w-7 fill-current">
@@ -431,7 +365,9 @@ export const Properties = () => {
 
   return (
     <main className="bg-[#f8fafc]">
-      <DraggableWhatsApp />
+      {/* Dynamic visibility control pass down based on panel state */}
+      <WhatsAppButton hideOnMobile={isMobileFiltersOpen} />
+      
       <section className="page-container py-6 lg:py-12 2xl:py-16 px-4 sm:px-6">
         <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="space-y-1.5">
