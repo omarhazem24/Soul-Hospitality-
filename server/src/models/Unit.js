@@ -70,8 +70,7 @@ const unitSchema = new mongoose.Schema({
     required: true
   },
   basePrice: {
-    type: Number,
-    required: true
+    type: Number
   },
   pricePerNight: {
     type: Number,

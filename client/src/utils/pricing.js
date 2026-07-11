@@ -14,8 +14,8 @@ export const getPriceForDate = (unit, date) => {
     return unit.monthPrices[monthKey];
   }
 
-  // Fall back to base price or pricePerNight
-  return unit.basePrice || unit.pricePerNight || 0;
+  // Fall back to pricePerNight or basePrice
+  return unit.pricePerNight || unit.basePrice || 0;
 };
 
 export const getCurrentMonthPrice = (unit) => {
