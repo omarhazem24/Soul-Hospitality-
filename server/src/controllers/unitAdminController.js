@@ -129,7 +129,6 @@ const buildUnitPayload = (body, photos) => {
   const type = normalizeUnitType(body.type || body.unit_type);
   const bedrooms = Number(body.bedrooms ?? body.bedroom_count ?? 0);
   const bathrooms = Number(body.bathrooms ?? body.bathroom_count ?? 0);
-  const area = Number(body.area ?? body.area_m2 ?? 0);
   const pricePerNight = Number(body.pricePerNight ?? body.price_per_night ?? body.price ?? 0);
   const beachAccessPricePerPersonPerWeek = Number(
     body.beachAccessPricePerPersonPerWeek ??
@@ -163,8 +162,6 @@ const buildUnitPayload = (body, photos) => {
     bedroom_count: bedrooms,
     bathrooms,
     bathroom_count: bathrooms,
-    area,
-    area_m2: area,
     floor: body.floor,
     pricePerNight,
     price: pricePerNight,
@@ -292,12 +289,6 @@ export const updateUnit = asyncHandler(async (request, response) => {
     updates.location_link = normalizeLocationLink(
       request.body.locationUrl || request.body.location_url || request.body.locationLink
     );
-  }
-
-  if (request.body.area !== undefined || request.body.area_m2 !== undefined) {
-    const area = Number(request.body.area ?? request.body.area_m2);
-    updates.area = area;
-    updates.area_m2 = area;
   }
 
   if (

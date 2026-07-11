@@ -11,7 +11,6 @@ const buildInitialState = (values = {}) => ({
   type: values.type || 'Apartment',
   bedrooms: values.bedrooms || '',
   bathrooms: values.bathrooms || '',
-  area: values.area || '',
   floor: values.floor || '',
   pricePerNight: values.pricePerNight || '',
   beachAccessPricePerPersonPerWeek: values.beachAccessPricePerPersonPerWeek ?? '',
@@ -247,7 +246,6 @@ export const AdminUnitForm = ({ initialValues, onCancel, onSaved }) => {
       formData.append('type', formState.type);
       formData.append('bedrooms', String(Number(formState.bedrooms || 0)));
       formData.append('bathrooms', String(Number(formState.bathrooms || 0)));
-      formData.append('area', String(Number(formState.area || 0)));
       formData.append('floor', formState.floor);
       formData.append('pricePerNight', String(Number(formState.pricePerNight || 0)));
       formData.append('beachAccessPricePerPersonPerWeek', String(Number(formState.beachAccessPricePerPersonPerWeek || 0)));
@@ -292,7 +290,6 @@ export const AdminUnitForm = ({ initialValues, onCancel, onSaved }) => {
           ['uniqueId', 'Unit ID', 'text'],
           ['bedrooms', 'Bedrooms', 'number'],
           ['bathrooms', 'Bathrooms', 'number'],
-          ['area', 'Area (m²)', 'number'],
           ['floor', 'Floor', 'text'],
           ['pricePerNight', 'Price Per Night', 'number'],
           ['beachAccessPricePerPersonPerWeek', 'Beach Access / Person', 'number'],
@@ -308,7 +305,7 @@ export const AdminUnitForm = ({ initialValues, onCancel, onSaved }) => {
               value={formState[field]}
               onChange={(event) => handleChange(field, event.target.value)}
               className={fieldClass}
-              required={['name', 'bedrooms', 'bathrooms', 'area', 'floor', 'pricePerNight', 'location_link'].includes(field)}
+              required={['name', 'bedrooms', 'bathrooms', 'floor', 'pricePerNight', 'location_link'].includes(field)}
             />
           </label>
         ))}

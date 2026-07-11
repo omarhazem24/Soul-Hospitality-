@@ -51,13 +51,6 @@ const BathIcon = () => (
   </svg>
 );
 
-const AreaIcon = () => (
-  <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" aria-hidden="true">
-    <path d="M5 5h14v14H5z" stroke="currentColor" strokeWidth="1.6" />
-    <path d="M8 12h8M12 8v8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-  </svg>
-);
-
 const PropertyCard = ({ listing }) => (
   <Link
     to={`/units/${listing._id}`}
@@ -102,10 +95,6 @@ const PropertyCard = ({ listing }) => (
         <span className="flex items-center gap-1.5">
           <BathIcon />
           {listing.bath}
-        </span>
-        <span className="flex items-center gap-1.5">
-          <AreaIcon />
-          {listing.area}
         </span>
       </div>
 
@@ -153,7 +142,6 @@ const normalizeUnits = (units) => {
       title: unit.name || unit.title || 'Premium Property',
       beds: `${unit.bedrooms || unit.bedroom_count || 0} beds`,
       bath: `${unit.bathrooms || unit.bathroom_count || 0} bath`,
-      area: `${unit.area || unit.area_m2 || 0} m²`,
       rating: Number(unit.averageRating || unit.rating || 0),
       reviewCount: Number(unit.reviewCount || unit.reviewsCount || 0),
       price: `${Number(unit.pricePerNight || unit.price || 0).toLocaleString()} EGP`

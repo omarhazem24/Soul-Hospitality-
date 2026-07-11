@@ -213,7 +213,6 @@ export default function UnitDetailsPage() {
   const facilities = toList(normalizedUnit.facilities);
   const bedrooms = normalizedUnit.bedrooms ?? normalizedUnit.bedroom_count ?? 0;
   const bathrooms = normalizedUnit.bathrooms ?? normalizedUnit.bathroom_count ?? 0;
-  const area = normalizedUnit.area ?? normalizedUnit.area_m2 ?? 0;
   const pricePerNight = normalizedUnit.pricePerNight ?? normalizedUnit.price ?? 0;
   const housekeepingMandatoryPrice = getDynamicHousekeepingFee(normalizedUnit);
   const rawBeachAccessPrice = getBeachAccessPrice(normalizedUnit);
@@ -396,7 +395,6 @@ export default function UnitDetailsPage() {
                 <div className="flex flex-wrap gap-3">
                   <MetadataItem icon={Bed} label="Bedrooms" value={bedrooms} />
                   <MetadataItem icon={Bath} label="Bathrooms" value={bathrooms} />
-                  <MetadataItem icon={Maximize2} label="Area Size (Sqm)" value={area} />
                   <MetadataItem icon={Building2} label="Beach Access" value={beachAccessGuestPricingSummary} />
                   <MetadataItem icon={Calendar} label="Beach Access Period" value={`${beachAccessDays} ${beachAccessDays === 1 ? 'day' : 'days'}`} />
                 </div>

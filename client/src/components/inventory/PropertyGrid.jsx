@@ -5,22 +5,19 @@ const inventory = [
     title: 'North Coast Sea Villa',
     price: 'EGP 12,400',
     bedrooms: '4 Bedrooms',
-    bathrooms: '3 Bathrooms',
-    area: '280 sqm'
+    bathrooms: '3 Bathrooms'
   },
   {
     title: 'Sheikh Zayed Courtyard Home',
     price: 'EGP 8,900',
     bedrooms: '3 Bedrooms',
-    bathrooms: '2 Bathrooms',
-    area: '185 sqm'
+    bathrooms: '2 Bathrooms'
   },
   {
     title: 'New Cairo Penthouse',
     price: 'EGP 15,600',
     bedrooms: '5 Bedrooms',
-    bathrooms: '4 Bathrooms',
-    area: '340 sqm'
+    bathrooms: '4 Bathrooms'
   }
 ];
 
@@ -55,7 +52,7 @@ export const PropertyGrid = () => {
               </div>
 
               <div className="mt-5 flex flex-wrap gap-2">
-                {[item.bedrooms, item.bathrooms, item.area].map((badge) => (
+                {[item.bedrooms, item.bathrooms].map((badge) => (
                   <span key={badge} className="rounded-md border border-line px-3 py-1 text-xs text-brand">
                     {badge}
                   </span>

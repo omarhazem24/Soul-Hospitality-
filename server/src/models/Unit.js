@@ -65,10 +65,6 @@ const unitSchema = new mongoose.Schema({
     type: Number,
     required: true
   },
-  area: {
-    type: Number,
-    required: true
-  },
   floor: {
     type: String,
     required: true

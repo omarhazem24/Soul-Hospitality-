@@ -10,7 +10,7 @@ export const BrandWordmark = ({ inverse = false, className = '' }) => {
       className={[
         inverse ? 'h-24 w-auto object-contain brightness-0 invert' : 'h-24 w-auto object-contain',
         className,
-        'transition-opacity duration-200 hover:opacity-90'
+        'transition-all duration-300 ease-out hover:opacity-90'
       ].join(' ')}
     />
   );

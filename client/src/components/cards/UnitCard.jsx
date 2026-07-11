@@ -71,7 +71,6 @@ export const UnitCard = ({ unit }) => {
           <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-[0.14em] text-brand/75">
             <span className="rounded-md border border-slate-200 px-3 py-2">Beds {unit.bedroom_count || 0}</span>
             <span className="rounded-md border border-slate-200 px-3 py-2">Baths {unit.bathroom_count || 0}</span>
-            <span className="rounded-md border border-slate-200 px-3 py-2">Area {unit.area_m2 || unit.area || 0} m²</span>
             {reviewCount > 0 ? (
               <>
                 <span className="rounded-md border border-amber-100 bg-amber-50 px-3 py-2 text-amber-700">★ {averageRating.toFixed(1)}</span>
