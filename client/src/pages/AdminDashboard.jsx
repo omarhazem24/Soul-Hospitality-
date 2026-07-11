@@ -9,6 +9,7 @@ const ADMIN_NAV_ITEMS = [
   ["Units", "/admin/units"],
   ["Reservations", "/admin/reservations"],
   ["Schedule", "/admin/schedule"],
+  ["Pricing", "/admin/pricing"],
   ["Commissions", "/admin/commissions"],
   ["Projects", "/admin/projects"],
   ["Promos", "/admin/promos"],

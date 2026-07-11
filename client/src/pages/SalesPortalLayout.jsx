@@ -8,6 +8,7 @@ const SALES_NAV_ITEMS = [
   ['Dashboard', '/sales/dashboard'],
   ['Reservations', '/sales/reservations'],
   ['Schedule', '/sales/schedule'],
+  ['Pricing', '/sales/pricing'],
 ];
 
 const isSalesRole = (role) => role === 'Sales';

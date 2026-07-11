@@ -69,9 +69,23 @@ const unitSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  basePrice: {
+    type: Number,
+    required: true
+  },
   pricePerNight: {
     type: Number,
     required: true
+  },
+  monthPrices: {
+    type: Map,
+    of: Number,
+    default: new Map()
+  },
+  dateOverrides: {
+    type: Map,
+    of: Number,
+    default: new Map()
   },
   capacity: {
     type: Number,

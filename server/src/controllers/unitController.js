@@ -276,3 +276,55 @@ export const getUnitByIdentifier = asyncHandler(async (request, response) => {
 });
 
 export const getUnitById = getUnitByIdentifier;
+
+export const updateUnitPricing = asyncHandler(async (request, response) => {
+  const { id } = request.params;
+  const { price, applyMode, dates, monthKey } = request.body;
+
+  const unit = await Unit.findOne({ _id: id });
+
+  if (!unit) {
+    return response.status(404).json({
+      success: false,
+      message: 'Unit not found'
+    });
+  }
+
+  if (applyMode === 'day' && Array.isArray(dates) && dates.length > 0) {
+    // Update specific date overrides
+    if (!unit.dateOverrides) {
+      unit.dateOverrides = new Map();
+    }
+    
+    dates.forEach(date => {
+      if (unit.dateOverrides instanceof Map) {
+        unit.dateOverrides.set(date, price);
+      } else {
+        unit.dateOverrides[date] = price;
+      }
+    });
+  } else if (applyMode === 'month' && monthKey) {
+    // Update month price
+    if (!unit.monthPrices) {
+      unit.monthPrices = new Map();
+    }
+    
+    if (unit.monthPrices instanceof Map) {
+      unit.monthPrices.set(monthKey, price);
+    } else {
+      unit.monthPrices[monthKey] = price;
+    }
+  } else {
+    return response.status(400).json({
+      success: false,
+      message: 'Invalid pricing update request'
+    });
+  }
+
+  await unit.save();
+
+  return response.status(200).json({
+    success: true,
+    data: unit
+  });
+});

@@ -43,6 +43,43 @@ const calculateNights = (checkInDate, checkOutDate) => {
 
 const calculateWeightedGuests = (guestCount) => Number(guestCount || 0);
 
+const getPriceForDate = (unit, date) => {
+  const dateKey = date.toISOString().split('T')[0];
+  const monthKey = date.toISOString().slice(0, 7);
+
+  // Check for date override first
+  if (unit.dateOverrides && unit.dateOverrides instanceof Map && unit.dateOverrides.has(dateKey)) {
+    return unit.dateOverrides.get(dateKey);
+  }
+  if (unit.dateOverrides && typeof unit.dateOverrides === 'object' && unit.dateOverrides[dateKey]) {
+    return unit.dateOverrides[dateKey];
+  }
+
+  // Check for month price
+  if (unit.monthPrices && unit.monthPrices instanceof Map && unit.monthPrices.has(monthKey)) {
+    return unit.monthPrices.get(monthKey);
+  }
+  if (unit.monthPrices && typeof unit.monthPrices === 'object' && unit.monthPrices[monthKey]) {
+    return unit.monthPrices[monthKey];
+  }
+
+  // Fall back to base price or pricePerNight
+  return unit.basePrice || unit.pricePerNight || 0;
+};
+
+const calculateWeightedPriceForDateRange = (unit, checkInDate, checkOutDate) => {
+  const nights = calculateNights(checkInDate, checkOutDate);
+  let totalPrice = 0;
+  
+  for (let i = 0; i < nights; i++) {
+    const currentDate = new Date(checkInDate);
+    currentDate.setDate(currentDate.getDate() + i);
+    totalPrice += getPriceForDate(unit, currentDate);
+  }
+  
+  return totalPrice;
+};
+
 const getDynamicHousekeepingFee = (unit) => {
   const propertyType = String(unit?.propertyType || unit?.type || unit?.unit_type || '').trim().toLowerCase();
   return propertyType === 'villa' ? 2500 : 1500;
@@ -180,7 +217,8 @@ const calculateReservationQuote = async ({
   const gaiaBeachOverride = getGaiaBeachOverride(unit, nights);
   const beachAccessDays = gaiaBeachOverride?.beachAccessDays ?? getBeachAccessDays(unit);
   const beachAccessPeriods = Math.ceil(nights / beachAccessDays);
-  const pricePerNight = Number(unit.pricePerNight || unit.price || 0);
+  const baseAccommodationAmount = calculateWeightedPriceForDateRange(unit, checkInDate, checkOutDate);
+  const pricePerNight = Math.round(baseAccommodationAmount / nights);
   const configuredBeachBasePrice = getConfiguredBeachAccessPrice(unit);
   const beachAccessPricePerPersonPerWeek = gaiaBeachOverride?.beachAccessPricePerPersonPerWeek ?? configuredBeachBasePrice;
   const beachAccessExtraGuestPricePerPerson = gaiaBeachOverride?.beachAccessExtraGuestPricePerPerson ?? getBeachAccessExtraGuestPrice(unit, configuredBeachBasePrice);
@@ -190,8 +228,6 @@ const calculateReservationQuote = async ({
   const beachPassHeadcount = Number(guestCount || 0);
   const includedBeachGuests = Math.min(beachPassHeadcount, unitCapacity);
   const extraBeachGuests = Math.max(0, beachPassHeadcount - unitCapacity);
-
-  const baseAccommodationAmount = nights * pricePerNight;
   const beachAccessAmount = ((includedBeachGuests * beachAccessPricePerPersonPerWeek) + (extraBeachGuests * beachAccessExtraGuestPricePerPerson)) * beachAccessPeriods;
   const downPaymentCollected = Number(financials.downPaymentCollected || 0);
   const insurance = Number(financials.insurance || 0);
@@ -486,7 +522,8 @@ export const createReservationHold = async ({
     const gaiaBeachOverride = getGaiaBeachOverride(unit, nights);
     const beachAccessDays = gaiaBeachOverride?.beachAccessDays ?? getBeachAccessDays(unit);
     const beachAccessPeriods = Math.ceil(nights / beachAccessDays);
-    const pricePerNight = Number(unit.pricePerNight || unit.price || 0);
+    const baseAccommodationAmount = calculateWeightedPriceForDateRange(unit, checkInDate, checkOutDate);
+    const pricePerNight = Math.round(baseAccommodationAmount / nights);
     const configuredBeachBasePrice = getConfiguredBeachAccessPrice(unit);
     const beachAccessPricePerPersonPerWeek = gaiaBeachOverride?.beachAccessPricePerPersonPerWeek ?? configuredBeachBasePrice;
     const beachAccessExtraGuestPricePerPerson = gaiaBeachOverride?.beachAccessExtraGuestPricePerPerson ?? getBeachAccessExtraGuestPrice(unit, configuredBeachBasePrice);
@@ -496,8 +533,6 @@ export const createReservationHold = async ({
     const beachPassHeadcount = Number(guestCount || 0);
     const includedBeachGuests = Math.min(beachPassHeadcount, unitCapacity);
     const extraBeachGuests = Math.max(0, beachPassHeadcount - unitCapacity);
-
-    const baseAccommodationAmount = nights * pricePerNight;
     const beachAccessAmount = ((includedBeachGuests * beachAccessPricePerPersonPerWeek) + (extraBeachGuests * beachAccessExtraGuestPricePerPerson)) * beachAccessPeriods;
     const downPaymentCollected = Number(financials.downPaymentCollected || 0);
     const insurance = Number(financials.insurance || 0);

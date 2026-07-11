@@ -27,6 +27,7 @@ import { AdminProjects } from "./pages/AdminProjects.jsx";
 import { AdminCommissions } from "./pages/AdminCommissions.jsx";
 import { AdminStaffForm } from "./pages/AdminStaffForm.jsx";
 import { AdminSlideshow } from "./pages/AdminSlideshow.jsx";
+import { PricingSchedule } from "./pages/PricingSchedule.jsx";
 import { SalesPortalLayout } from "./pages/SalesPortalLayout.jsx";
 import { SalesDashboard } from "./pages/SalesDashboard.jsx";
 import { SalesReservations } from "./pages/SalesReservations.jsx";
@@ -101,6 +102,7 @@ export default function App() {
           <Route path="profile" element={<AdminProfile />} />
           <Route path="staff" element={<AdminStaffForm />} />
           <Route path="slideshow" element={<AdminSlideshow />} />
+          <Route path="pricing" element={<PricingSchedule />} />
         </Route>
 
         <Route
@@ -115,6 +117,7 @@ export default function App() {
           <Route path="dashboard" element={<SalesDashboard />} />
           <Route path="reservations" element={<SalesReservations />} />
           <Route path="schedule" element={<SalesSchedule />} />
+          <Route path="pricing" element={<PricingSchedule />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

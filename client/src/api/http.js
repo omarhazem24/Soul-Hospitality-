@@ -197,3 +197,5 @@ export const createAdminSlideshow = (formData) =>
   apiPost("/admin/slideshow", formData);
 export const deleteAdminSlideshow = (slideId) =>
   apiDelete(`/admin/slideshow/${slideId}`);
+export const fetchAllUnits = (params = {}) => apiGet("/units", params);
+export const updateUnitPricing = (unitId, payload) => apiPut(`/units/${unitId}/pricing`, payload);

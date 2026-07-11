@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Minus, Plus, RotateCcw, Search, SlidersHorizontal, X } from 'lucide-react';
 import { fetchAvailableUnits, fetchProjectNames } from '../api/http.js';
+import { getCurrentMonthPrice, formatPrice } from '../utils/pricing.js';
 
 const propertyTypes = ['Apartment', 'Studio', 'Villa', 'Townhouse', 'Penthouse', 'Chalet', 'Hotel Room'];
 const viewOptions = ['Sea view', 'Pool view', 'Double view (Sea and Pool)', 'Side view', 'Street view', 'Back view', 'Garden view', 'Lagoon view'];
@@ -130,6 +131,7 @@ const normalizeUnits = (units) => {
     const normalizedLocation = unit.projectName || unit.location || unit.destination || 'Prime Location';
     const unitType = unit.type || unit.unit_type || 'Apartment';
     const primaryPhoto = unit.photos?.[0] || unit.images?.[0] || 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1400&q=80';
+    const currentPrice = getCurrentMonthPrice(unit);
 
     return {
       _id: unit._id || unit.id || `unit-${index}`,
@@ -144,7 +146,8 @@ const normalizeUnits = (units) => {
       bath: `${unit.bathrooms || unit.bathroom_count || 0} bath`,
       rating: Number(unit.averageRating || unit.rating || 0),
       reviewCount: Number(unit.reviewCount || unit.reviewsCount || 0),
-      price: `${Number(unit.pricePerNight || unit.price || 0).toLocaleString()} EGP`
+      price: formatPrice(currentPrice),
+      originalUnit: unit
     };
   });
 };

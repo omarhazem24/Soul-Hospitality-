@@ -7,6 +7,7 @@ import AddReviewForm from '../components/reviews/AddReviewForm.jsx';
 import UnitReviewsDisplay from '../components/reviews/UnitReviewsDisplay.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { BOOKING_POLICIES } from '../constants/bookingPolicies.js';
+import { getCurrentMonthPrice, formatPrice } from '../utils/pricing.js';
 
 const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1400&q=80';
 
@@ -213,7 +214,7 @@ export default function UnitDetailsPage() {
   const facilities = toList(normalizedUnit.facilities);
   const bedrooms = normalizedUnit.bedrooms ?? normalizedUnit.bedroom_count ?? 0;
   const bathrooms = normalizedUnit.bathrooms ?? normalizedUnit.bathroom_count ?? 0;
-  const pricePerNight = normalizedUnit.pricePerNight ?? normalizedUnit.price ?? 0;
+  const pricePerNight = getCurrentMonthPrice(normalizedUnit);
   const housekeepingMandatoryPrice = getDynamicHousekeepingFee(normalizedUnit);
   const rawBeachAccessPrice = getBeachAccessPrice(normalizedUnit);
   const beachAccessPricePerPersonPerWeek = rawBeachAccessPrice > 0 ? rawBeachAccessPrice : 500;
