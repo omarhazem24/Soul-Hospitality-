@@ -26,6 +26,11 @@ const normalizePrice = (value) => {
 
 const destinations = [
   {
+    title: 'North Coast',
+    image:
+      'https://res.cloudinary.com/zqhyzmvl/image/upload/v1783598439/egypt_Alamein_min_94ac5d1ba1_udlv2p_y4qxtj.jpg'
+  },
+  {
     title: 'Ain Sokhna',
     image:
       'https://res.cloudinary.com/zqhyzmvl/image/upload/v1783598437/porto-sokhna-beach-resort-servicios-12e06d36_ofqyg1_kaq1yt.jpg'
