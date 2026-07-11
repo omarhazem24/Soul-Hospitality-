@@ -72,19 +72,6 @@ export const Home = () => {
   const [units, setUnits] = useState([]);
   const [featuredIndex, setFeaturedIndex] = useState(0);
   const [visibleFeaturedCards, setVisibleFeaturedCards] = useState(3);
-  const [isScrolled, setIsScrolled] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      if (window.scrollY > 20) {
-        setIsScrolled(true);
-      } else {
-        setIsScrolled(false);
-      }
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -256,32 +243,7 @@ export const Home = () => {
   }, [featuredDestinationSlides, featuredIndex, visibleFeaturedCards]);
 
   return (
-    <main className="bg-white pt-[54px]">
-      {/* 
-        Sticky Navigation Bar:
-        - Scale context is cut by 1.2x (from standard py-4 down to py-2.5)
-        - Uses 'fixed top-0' layout configuration to dynamically track display scroll coordinates
-        - Adds dynamic background styling transition triggers when the viewport scrolls down
-      */}
-      <header 
-        className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${
-          isScrolled 
-            ? 'bg-slate-900/95 shadow-md backdrop-blur-sm' 
-            : 'bg-slate-950/40 border-b border-white/10'
-        }`}
-      >
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 flex items-center justify-between py-2.5">
-          <Link to="/" className="flex items-center gap-2 outline-none">
-            <BrandWordmark className="h-6 w-auto text-white invert" />
-          </Link>
-          <nav className="flex items-center gap-6 text-xs font-semibold uppercase tracking-wider text-white">
-            <Link to="/units" className="hover:text-white/80 transition-colors no-underline">Stays</Link>
-            <Link to="/about-soul" className="hover:text-white/80 transition-colors no-underline">About</Link>
-            <Link to="/login" className="rounded-full bg-white/15 px-4 py-1.5 hover:bg-white/25 transition-colors no-underline">Login</Link>
-          </nav>
-        </div>
-      </header>
-
+    <main className="bg-white">
       <section className="relative isolate overflow-visible border-b border-slate-200 min-h-[78vh] md:min-h-[500px] lg:h-[55vh] lg:min-h-[500px]">
         <div
           className="absolute inset-0 bg-cover bg-center"
@@ -308,6 +270,7 @@ export const Home = () => {
             <SearchCapsule />
           </div>
         </div>
+
       </section>
 
       <section className="page-container py-14 lg:py-24">
@@ -371,55 +334,55 @@ export const Home = () => {
                 : 'Price on request';
 
               return (
-                <article
-                  key={card.id}
-                  className="w-full sm:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)] rounded-3xl border border-slate-200 bg-white shadow-[0_12px_35px_rgba(40,63,94,0.08)]"
-                >
-                  <div className="relative aspect-[4/3] w-full overflow-hidden rounded-t-3xl">
-                    <img src={card.image} alt={card.destination} className="h-full w-full object-cover" />
-                    <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(2,6,23,0)_30%,rgba(2,6,23,0.78)_100%)]" />
-                    <div className="absolute inset-x-0 bottom-0 bg-slate-950/45 px-3 py-2 backdrop-blur-sm">
-                      <p className="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-white">Nightly Rate</p>
-                      <p className="mt-1 text-sm font-semibold uppercase tracking-[0.18em] text-white">
-                        {priceLabel}
-                      </p>
-                    </div>
+              <article
+                key={card.id}
+                className="w-full sm:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)] rounded-3xl border border-slate-200 bg-white shadow-[0_12px_35px_rgba(40,63,94,0.08)]"
+              >
+                <div className="relative aspect-[4/3] w-full overflow-hidden rounded-t-3xl">
+                  <img src={card.image} alt={card.destination} className="h-full w-full object-cover" />
+                  <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(2,6,23,0)_30%,rgba(2,6,23,0.78)_100%)]" />
+                  <div className="absolute inset-x-0 bottom-0 bg-slate-950/45 px-3 py-2 backdrop-blur-sm">
+                    <p className="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-white">Nightly Rate</p>
+                    <p className="mt-1 text-sm font-semibold uppercase tracking-[0.18em] text-white">
+                      {priceLabel}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-3 p-3">
+                  <div className="space-y-2">
+                    <p className="text-base font-semibold leading-tight tracking-[0.06em] text-brand 2xl:text-lg">{card.title}</p>
+                    <p className="flex items-center gap-1.5 text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-brand/60 2xl:text-xs">
+                      <MapPin className="h-3.5 w-3.5" />
+                      {card.destination} | {card.viewType}
+                    </p>
                   </div>
 
-                  <div className="space-y-3 p-3">
-                    <div className="space-y-2">
-                      <p className="text-base font-semibold leading-tight tracking-[0.06em] text-brand 2xl:text-lg">{card.title}</p>
-                      <p className="flex items-center gap-1.5 text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-brand/60 2xl:text-xs">
-                        <MapPin className="h-3.5 w-3.5" />
-                        {card.destination} | {card.viewType}
-                      </p>
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-[0.66rem] font-semibold uppercase tracking-[0.16em] text-brand/70">
-                      <span className="inline-flex items-center gap-1.5">
-                        <BedDouble className="h-3.5 w-3.5" />
-                        {card.bedrooms || 0} Bed
-                      </span>
-                      <span className="inline-flex items-center gap-1.5">
-                        <Bath className="h-3.5 w-3.5" />
-                        {card.bathrooms || 0} Bath
-                      </span>
-                      <span className="inline-flex items-center gap-1.5">
-                        <Users className="h-3.5 w-3.5" />
-                        {card.guests || 0} Guests
-                      </span>
-                    </div>
-
-                    <div className="flex justify-end">
-                      <Link
-                        to="/units"
-                        className="inline-flex items-center justify-center rounded-full bg-[#283f5e] px-6 py-3 text-sm font-semibold uppercase tracking-[0.16em] text-white no-underline transition-all duration-300 ease-out hover:bg-[#1e3047] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#283f5e]/45"
-                      >
-                        Book Now
-                      </Link>
-                    </div>
+                  <div className="grid grid-cols-3 gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-[0.66rem] font-semibold uppercase tracking-[0.16em] text-brand/70">
+                    <span className="inline-flex items-center gap-1.5">
+                      <BedDouble className="h-3.5 w-3.5" />
+                      {card.bedrooms || 0} Bed
+                    </span>
+                    <span className="inline-flex items-center gap-1.5">
+                      <Bath className="h-3.5 w-3.5" />
+                      {card.bathrooms || 0} Bath
+                    </span>
+                    <span className="inline-flex items-center gap-1.5">
+                      <Users className="h-3.5 w-3.5" />
+                      {card.guests || 0} Guests
+                    </span>
                   </div>
-                </article>
+
+                  <div className="flex justify-end">
+                    <Link
+                      to="/units"
+                      className="inline-flex items-center justify-center rounded-full bg-[#283f5e] px-6 py-3 text-sm font-semibold uppercase tracking-[0.16em] text-white no-underline transition-all duration-300 ease-out hover:bg-[#1e3047] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#283f5e]/45"
+                    >
+                      Book Now
+                    </Link>
+                  </div>
+                </div>
+              </article>
               );
             })}
           </div>
