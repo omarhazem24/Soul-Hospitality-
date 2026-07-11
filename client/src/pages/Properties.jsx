@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Minus, Plus, RotateCcw, Search, SlidersHorizontal } from 'lucide-react';
+import { Minus, Plus, RotateCcw, Search, SlidersHorizontal, X } from 'lucide-react';
 import { fetchAvailableUnits, fetchProjectNames } from '../api/http.js';
 
 const propertyTypes = ['Apartment', 'Studio', 'Villa', 'Townhouse', 'Penthouse', 'Chalet', 'Hotel Room'];
@@ -23,8 +23,8 @@ const defaultBedrooms = 0;
 const defaultAppliedFilters = {};
 
 const CheckItem = ({ label, checked, onChange }) => (
-  <label className="flex items-center gap-2.5 text-[15px] text-slate-600 sm:text-sm">
-    <input type="checkbox" checked={checked} onChange={onChange} className="h-4 w-4 rounded border-slate-300 text-[#134e5e] focus:ring-[#134e5e]" />
+  <label className="flex items-center gap-3 py-1.5 text-[15px] text-slate-600 sm:text-sm cursor-pointer select-none">
+    <input type="checkbox" checked={checked} onChange={onChange} className="h-5 w-5 sm:h-4 sm:w-4 rounded border-slate-300 text-[#134e5e] focus:ring-[#134e5e]" />
     <span>{label}</span>
   </label>
 );
@@ -346,255 +346,274 @@ export const Properties = () => {
 
   return (
     <main className="bg-[#f8fafc]">
-      <section className="page-container py-10 lg:py-12 2xl:py-16">
-        <div className="mb-8 flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-          <div className="space-y-3">
+      <section className="page-container py-6 lg:py-12 2xl:py-16 px-4 sm:px-6">
+        <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div className="space-y-1.5">
             <p className="text-xs text-slate-400">Home &gt; Properties In Egypt</p>
             <div className="flex flex-wrap items-baseline gap-2">
               <h1 className="text-xl font-bold text-[#283f5e] 2xl:text-3xl">Property Listing</h1>
-              <span className="ml-0 inline-block align-baseline text-sm text-slate-500 2xl:text-base">
-                There are currently {displayListings.length} properties.
+              <span className="inline-block text-sm text-slate-500 2xl:text-base">
+                ({displayListings.length} available)
               </span>
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
               onClick={() => setIsMobileFiltersOpen(true)}
-              className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-slate-600 lg:hidden"
+              className="flex-1 lg:flex-none inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-semibold uppercase tracking-[0.12em] text-slate-700 lg:hidden shadow-sm active:bg-slate-50"
             >
-              <SlidersHorizontal className="h-4 w-4" strokeWidth={1.6} aria-hidden="true" />
+              <SlidersHorizontal className="h-4 w-4" strokeWidth={1.8} aria-hidden="true" />
               Filters
             </button>
-            <label className="border border-slate-200 rounded-lg px-4 py-2 text-xs font-medium text-slate-600 bg-white inline-flex items-center gap-2">
-              <span>Show:</span>
-              <select
-                value={showLimit}
-                onChange={(event) => setShowLimit(Number(event.target.value))}
-                className="bg-transparent outline-none"
-                aria-label="Show number of properties"
-              >
-                {showOptions.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="border border-slate-200 rounded-lg px-4 py-2 text-xs font-medium text-slate-600 bg-white inline-flex items-center gap-2">
-              <span>Sort by</span>
-              <select
-                value={sortOption}
-                onChange={(event) => setSortOption(event.target.value)}
-                className="bg-transparent outline-none"
-                aria-label="Sort properties"
-              >
-                {sortOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="border border-slate-200 rounded-lg px-4 py-2 text-xs font-medium text-slate-600 bg-white inline-flex items-center gap-2">
-              <span>Destination</span>
-              <select
-                value={selectedDestination}
-                onChange={(event) => setSelectedDestination(event.target.value)}
-                className="bg-transparent outline-none"
-                aria-label="Filter by destination"
-              >
-                <option value="">All Destinations</option>
-                {projectOptions.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
-            </label>
+            
+            <div className="grid grid-cols-2 gap-2 w-full lg:flex lg:w-auto">
+              <label className="border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-medium text-slate-600 bg-white inline-flex items-center justify-between lg:justify-start gap-2 shadow-sm">
+                <span>Show:</span>
+                <select
+                  value={showLimit}
+                  onChange={(event) => setShowLimit(Number(event.target.value))}
+                  className="bg-transparent outline-none font-bold text-slate-800"
+                  aria-label="Show number of properties"
+                >
+                  {showOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-medium text-slate-600 bg-white inline-flex items-center justify-between lg:justify-start gap-2 shadow-sm">
+                <span>Sort:</span>
+                <select
+                  value={sortOption}
+                  onChange={(event) => setSortOption(event.target.value)}
+                  className="bg-transparent outline-none font-bold text-slate-800 max-w-[100px] sm:max-w-none truncate"
+                  aria-label="Sort properties"
+                >
+                  {sortOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
           </div>
         </div>
 
-        {isMobileFiltersOpen ? (
-          <button
-            type="button"
-            aria-label="Close filters"
-            className="fixed inset-0 z-40 bg-slate-900/30 lg:hidden"
+        {/* Backdrop overlay for mobile drawer */}
+        {isMobileFiltersOpen && (
+          <div 
+            className="fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-sm lg:hidden transition-opacity"
             onClick={() => setIsMobileFiltersOpen(false)}
           />
-        ) : null}
+        )}
 
         <div className="flex flex-col gap-8 lg:flex-row lg:items-start 2xl:gap-10">
+          {/* Main Sidebar Wrapper */}
           <aside
             className={[
-              'w-full bg-white border border-slate-100 rounded-3xl p-4 sm:p-5 lg:rounded-[2rem] lg:p-6 flex flex-col items-center gap-4 sm:gap-5 lg:gap-6 self-start [&>div]:w-full [&>div]:max-w-[340px]',
+              // Base Mobile Rules (Full-screen bottom sheet panel)
               isMobileFiltersOpen
-                ? 'fixed inset-x-3 bottom-3 top-20 z-50 overflow-y-auto shadow-2xl'
+                ? 'fixed inset-x-0 bottom-0 top-16 z-50 flex flex-col bg-white rounded-t-[2rem] shadow-2xl overflow-hidden animate-in slide-in-from-bottom duration-300'
                 : 'hidden',
-              'lg:sticky lg:top-6 lg:z-auto lg:flex lg:w-[380px] lg:overflow-visible lg:shadow-none'
+              // Desktop Override Rules
+              'lg:sticky lg:top-6 lg:z-auto lg:flex lg:w-[380px] lg:h-auto lg:bg-white lg:border lg:border-slate-100 lg:rounded-[2rem] lg:shadow-none lg:overflow-visible'
             ].join(' ')}
           >
-            <div className="mb-1 flex items-center justify-between lg:hidden">
-              <h2 className="text-sm font-semibold text-slate-800">Filters</h2>
+            {/* Mobile Header fixed at top of drawer */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 lg:hidden bg-white shrink-0">
+              <div className="flex items-center gap-2">
+                <SlidersHorizontal className="h-4 w-4 text-slate-800" />
+                <h2 className="text-base font-bold text-slate-800">Filters</h2>
+              </div>
               <button
                 type="button"
                 onClick={() => setIsMobileFiltersOpen(false)}
-                className="rounded-full border border-slate-200 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600"
+                className="p-1 rounded-full bg-slate-100 text-slate-500 active:bg-slate-200"
+                aria-label="Close filters"
               >
-                Close
+                <X className="h-5 w-5" />
               </button>
             </div>
 
-            <div>
-              <h2 className="mb-2 text-xs font-bold text-slate-800 sm:text-sm">Property Type</h2>
-              <div className="max-h-48 overflow-y-auto pr-3 space-y-3 thin-scrollbar">
-                {propertyTypes.map((item) => (
-                  <CheckItem
-                    key={item}
-                    label={item}
-                    checked={selectedTypes.includes(item)}
-                    onChange={() => toggleListValue(setSelectedTypes, item)}
+            {/* Scrollable Container for Filters */}
+            <div className="flex-1 overflow-y-auto px-6 py-5 lg:p-6 space-y-6 lg:space-y-6 pb-28 lg:pb-6 thin-scrollbar">
+              {/* Property Type */}
+              <div>
+                <h3 className="mb-2.5 text-xs font-bold uppercase tracking-wider text-slate-400 sm:text-sm">Property Type</h3>
+                <div className="max-h-48 overflow-y-auto pr-2 space-y-1 thin-scrollbar">
+                  {propertyTypes.map((item) => (
+                    <CheckItem
+                      key={item}
+                      label={item}
+                      checked={selectedTypes.includes(item)}
+                      onChange={() => toggleListValue(setSelectedTypes, item)}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              {/* Project Name */}
+              <div>
+                <h3 className="mb-2.5 text-xs font-bold uppercase tracking-wider text-slate-400 sm:text-sm">Project Name</h3>
+                <label className="flex items-center gap-3 rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-500 bg-slate-50/50">
+                  <Search className="h-4 w-4 text-slate-400" strokeWidth={1.5} aria-hidden="true" />
+                  <input value={projectName} onChange={(event) => setProjectName(event.target.value)} placeholder="Search project name" className="w-full bg-transparent outline-none placeholder:text-slate-400 text-slate-800" />
+                </label>
+              </div>
+
+              {/* Destination */}
+              <div>
+                <h3 className="mb-2.5 text-xs font-bold uppercase tracking-wider text-slate-400 sm:text-sm">Destination</h3>
+                <select
+                  value={selectedDestination}
+                  onChange={(event) => setSelectedDestination(event.target.value)}
+                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none"
+                  aria-label="Filter by destination"
+                >
+                  <option value="">All Destinations</option>
+                  {projectOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Bedrooms counter */}
+              <div>
+                <h3 className="mb-2.5 text-xs font-bold uppercase tracking-wider text-slate-400 sm:text-sm">Bedrooms</h3>
+                <div className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-600">
+                  <button
+                    type="button"
+                    onClick={() => setBedrooms((current) => Math.max(0, Number(current) - 1))}
+                    className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition-colors hover:border-[#134e5e] hover:text-[#134e5e] disabled:cursor-not-allowed disabled:opacity-30 active:bg-slate-50"
+                    disabled={bedrooms <= 0}
+                    aria-label="Decrease bedrooms"
+                  >
+                    <Minus className="h-4 w-4" strokeWidth={2} aria-hidden="true" />
+                  </button>
+                  <div className="flex flex-col items-center">
+                    <span className="text-[14px] font-bold text-slate-800">{bedrooms > 0 ? `${bedrooms} Bedrooms` : 'Any Bedrooms'}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setBedrooms((current) => Number(current) + 1)}
+                    className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition-colors hover:border-[#134e5e] hover:text-[#134e5e] active:bg-slate-50"
+                    aria-label="Increase bedrooms"
+                  >
+                    <Plus className="h-4 w-4" strokeWidth={2} aria-hidden="true" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Price Range */}
+              <div>
+                <div className="flex items-center justify-between gap-3 mb-3">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 sm:text-sm">Price Range</h3>
+                  <span className="text-[12px] font-bold text-right text-[#134e5e]">EGP {priceRange[0].toLocaleString()} - {priceRange[1].toLocaleString()}</span>
+                </div>
+                <div className="space-y-4">
+                  <input
+                    type="range"
+                    min={PRICE_MIN}
+                    max={PRICE_MAX}
+                    value={priceRange[0]}
+                    onChange={(event) => setPriceRange(([_, max]) => [Math.min(Number(event.target.value), max - 100), max])}
+                    className="w-full accent-[#134e5e] h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer"
                   />
-                ))}
+                  <input
+                    type="range"
+                    min={PRICE_MIN}
+                    max={PRICE_MAX}
+                    value={priceRange[1]}
+                    onChange={(event) => setPriceRange(([min]) => [min, Math.max(Number(event.target.value), min + 100)])}
+                    className="w-full accent-[#134e5e] h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer"
+                  />
+                  <div className="grid grid-cols-2 gap-3">
+                    <label className="grid gap-1 text-[11px] font-semibold text-slate-500">
+                      Min Price
+                      <input
+                        type="number"
+                        min={PRICE_MIN}
+                        max={priceRange[1] - 100}
+                        value={priceRange[0] === PRICE_MIN ? '' : priceRange[0]}
+                        onChange={(event) => handleMinPriceInput(event.target.value)}
+                        placeholder="Min"
+                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-[#134e5e]"
+                      />
+                    </label>
+                    <label className="grid gap-1 text-[11px] font-semibold text-slate-500">
+                      Max Price
+                      <input
+                        type="number"
+                        min={priceRange[0] + 100}
+                        max={PRICE_MAX}
+                        value={priceRange[1] === PRICE_MAX ? '' : priceRange[1]}
+                        onChange={(event) => handleMaxPriceInput(event.target.value)}
+                        placeholder="Max"
+                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-[#134e5e]"
+                      />
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              {/* View Type */}
+              <div>
+                <h3 className="mb-2.5 text-xs font-bold uppercase tracking-wider text-slate-400 sm:text-sm">View Type</h3>
+                <div className="max-h-36 overflow-y-auto pr-2 space-y-1 thin-scrollbar">
+                  {viewOptions.map((item) => (
+                    <CheckItem
+                      key={item}
+                      label={item}
+                      checked={selectedViews.includes(item)}
+                      onChange={() => toggleListValue(setSelectedViews, item)}
+                    />
+                  ))}
+                </div>
               </div>
             </div>
 
-            <div>
-              <h2 className="mb-2 text-xs font-bold text-slate-800 sm:text-sm">Project Name</h2>
-              <label className="flex items-center gap-3 rounded-2xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-500 sm:px-4 sm:py-3">
-                <Search className="h-4 w-4 text-slate-400" strokeWidth={1.5} aria-hidden="true" />
-                <input value={projectName} onChange={(event) => setProjectName(event.target.value)} placeholder="Search project name" className="w-full bg-transparent outline-none placeholder:text-slate-400" />
-              </label>
-            </div>
-
-            <div>
-              <h2 className="mb-2 text-xs font-bold text-slate-800 sm:text-sm">Destination</h2>
-              <select
-                value={selectedDestination}
-                onChange={(event) => setSelectedDestination(event.target.value)}
-                className="w-full rounded-2xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-600 outline-none sm:px-4 sm:py-3"
-                aria-label="Filter by destination"
+            {/* Actions Panel - Sticky bottom footer layout on mobile devices */}
+            <div className="absolute bottom-0 inset-x-0 bg-white p-4 border-t border-slate-100 flex gap-3 lg:relative lg:border-none lg:p-6 lg:mt-0 shrink-0 z-10">
+              <button 
+                type="button" 
+                onClick={applyFilters} 
+                className="flex-1 inline-flex items-center justify-center gap-2 rounded-full bg-[#134e5e] px-5 py-3 text-sm font-semibold uppercase tracking-[0.12em] text-white shadow-md active:bg-[#0f3e4b] transition-colors"
               >
-                <option value="">All Destinations</option>
-                {projectOptions.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <h2 className="mb-2 text-xs font-bold text-slate-800 sm:text-sm">Bedrooms</h2>
-              <div className="flex items-center justify-between gap-2 rounded-2xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-600 sm:gap-3 sm:px-4 sm:py-3">
-                <button
-                  type="button"
-                  onClick={() => setBedrooms((current) => Math.max(0, Number(current) - 1))}
-                  className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 text-slate-500 transition-colors hover:border-[#134e5e] hover:text-[#134e5e] disabled:cursor-not-allowed disabled:opacity-40 sm:h-8 sm:w-8"
-                  disabled={bedrooms <= 0}
-                  aria-label="Decrease bedrooms"
-                >
-                  <Minus className="h-3.5 w-3.5 sm:h-4 sm:w-4" strokeWidth={1.8} aria-hidden="true" />
-                </button>
-                <div className="flex flex-col items-center">
-                  <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400 sm:text-xs sm:tracking-[0.18em]">Bedrooms</span>
-                  <span className="text-sm font-bold text-slate-800 sm:text-base">{bedrooms > 0 ? bedrooms : 'All'}</span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setBedrooms((current) => Number(current) + 1)}
-                  className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 text-slate-500 transition-colors hover:border-[#134e5e] hover:text-[#134e5e] sm:h-8 sm:w-8"
-                  aria-label="Increase bedrooms"
-                >
-                  <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" strokeWidth={1.8} aria-hidden="true" />
-                </button>
-              </div>
-            </div>
-
-            <div>
-              <div className="flex items-center justify-between gap-3 mb-3">
-                <h2 className="text-xs font-bold text-slate-800 sm:text-sm">Price Range</h2>
-                <span className="text-[11px] font-semibold text-right text-slate-700 sm:text-xs">EGP{priceRange[0].toLocaleString()} - EGP{priceRange[1].toLocaleString()}</span>
-              </div>
-              <div className="space-y-4">
-                <input
-                  type="range"
-                  min={PRICE_MIN}
-                  max={PRICE_MAX}
-                  value={priceRange[0]}
-                  onChange={(event) => setPriceRange(([_, max]) => [Math.min(Number(event.target.value), max - 100), max])}
-                  className="w-full accent-[#134e5e]"
-                />
-                <input
-                  type="range"
-                  min={PRICE_MIN}
-                  max={PRICE_MAX}
-                  value={priceRange[1]}
-                  onChange={(event) => setPriceRange(([min]) => [min, Math.max(Number(event.target.value), min + 100)])}
-                  className="w-full accent-[#134e5e]"
-                />
-                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                  <label className="grid gap-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500 sm:text-xs">
-                    Min Price
-                    <input
-                      type="number"
-                      min={PRICE_MIN}
-                      max={priceRange[1] - 100}
-                      value={priceRange[0] === PRICE_MIN ? '' : priceRange[0]}
-                      onChange={(event) => handleMinPriceInput(event.target.value)}
-                      placeholder="Min"
-                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-700 outline-none focus:border-[#134e5e]"
-                    />
-                  </label>
-                  <label className="grid gap-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500 sm:text-xs">
-                    Max Price
-                    <input
-                      type="number"
-                      min={priceRange[0] + 100}
-                      max={PRICE_MAX}
-                      value={priceRange[1] === PRICE_MAX ? '' : priceRange[1]}
-                      onChange={(event) => handleMaxPriceInput(event.target.value)}
-                      placeholder="Max"
-                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-700 outline-none focus:border-[#134e5e]"
-                    />
-                  </label>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <h2 className="mb-2 text-xs font-bold text-slate-800 sm:text-sm">View Type</h2>
-              <div className="max-h-32 overflow-y-auto pr-3 space-y-3 thin-scrollbar">
-                {viewOptions.map((item) => (
-                  <CheckItem
-                    key={item}
-                    label={item}
-                    checked={selectedViews.includes(item)}
-                    onChange={() => toggleListValue(setSelectedViews, item)}
-                  />
-                ))}
-              </div>
-            </div>
-
-            <div className="mt-2 flex flex-col gap-2.5 sm:mt-4 sm:flex-row sm:gap-3">
-              <button type="button" onClick={applyFilters} className="w-full sm:flex-1 inline-flex items-center justify-center gap-2 rounded-full bg-[#134e5e] px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.12em] text-white shadow-sm transition-all duration-300 ease-out hover:bg-[#0f3e4b] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#134e5e]/45 sm:px-6 sm:py-3 sm:text-sm sm:tracking-[0.16em]">
                 <SlidersHorizontal className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
                 Find Properties
               </button>
-              <button type="button" onClick={resetFilters} className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.12em] text-slate-600 transition-all duration-300 ease-out hover:border-[#134e5e] hover:text-[#134e5e] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#134e5e]/35 sm:px-6 sm:py-3 sm:text-sm sm:tracking-[0.16em]" aria-label="Clear property filters">
+              <button 
+                type="button" 
+                onClick={resetFilters} 
+                className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-semibold uppercase tracking-[0.12em] text-slate-600 active:bg-slate-50 transition-colors"
+                aria-label="Clear property filters"
+              >
                 <RotateCcw className="h-4 w-4" strokeWidth={1.6} aria-hidden="true" />
                 Clear
               </button>
             </div>
           </aside>
 
-          <section className="flex-1 grid grid-cols-1 gap-8 items-stretch md:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3 2xl:gap-10">
+          {/* Properties Grid */}
+          <section className="flex-1 grid grid-cols-1 gap-6 items-stretch md:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3 2xl:gap-8">
             {loading ? (
-              <div className="rounded-3xl border border-slate-100 bg-white p-8 text-sm text-slate-500 shadow-sm">Loading curated properties...</div>
+              <div className="col-span-full rounded-3xl border border-slate-100 bg-white p-8 text-sm text-slate-500 shadow-sm text-center">Loading curated properties...</div>
             ) : null}
 
-            {error ? <div className="rounded-3xl border border-slate-100 bg-white p-8 text-sm text-slate-500 shadow-sm">{error}</div> : null}
+            {error ? <div className="col-span-full rounded-3xl border border-slate-100 bg-white p-8 text-sm text-slate-500 shadow-sm text-center">{error}</div> : null}
+
+            {!loading && displayListings.length === 0 ? (
+              <div className="col-span-full rounded-3xl border border-slate-100 bg-white p-12 text-sm text-slate-500 shadow-sm text-center">
+                No properties match your current filter settings.
+              </div>
+            ) : null}
 
             {displayListings.map((listing) => (
               <PropertyCard key={listing._id} listing={listing} />
@@ -602,10 +621,10 @@ export const Properties = () => {
           </section>
         </div>
 
-        <div className="mt-10 flex items-center gap-4 text-xs uppercase tracking-[0.18em] text-brand/60">
+        <div className="mt-10 flex items-center justify-between sm:justify-start gap-4 text-xs uppercase tracking-[0.18em] text-brand/60">
           <span>{displayListings.length} curated stays</span>
-          <span className="h-px w-12 bg-slate-200" />
-          <Link to="/login" className="text-brand no-underline">
+          <span className="hidden sm:inline-block h-px w-12 bg-slate-200" />
+          <Link to="/login" className="text-brand no-underline font-bold">
             Login for reservations
           </Link>
         </div>
