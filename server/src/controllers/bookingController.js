@@ -95,6 +95,7 @@ const isPublicHttpUrl = (value) => {
 };
 
 const initializeKashierPayment = async ({ merchantOrderId, amount, callbackUrl }) => {
+  // 1. Map production environment config values natively
   const endpoint = process.env.KASHIER_PAYMENT_SESSION_URL || 'https://api.kashier.io/v3/payment/sessions';
   const merchantId = process.env.KASHIER_MERCHANT_ID || '';
   const secretKey = process.env.KASHIER_SECRET_KEY || '';
@@ -103,6 +104,7 @@ const initializeKashierPayment = async ({ merchantOrderId, amount, callbackUrl }
   const backendBaseUrl = process.env.BACKEND_PUBLIC_URL || '';
   const mode = String(process.env.KASHIER_MODE || 'live').trim().toLowerCase() === 'test' ? 'test' : 'live';
 
+  // 2. Strict validation guard checking for required system tokens
   if (!merchantId || !secretKey || !apiKey) {
     throw new AppError('Kashier gateway is not configured (missing merchant credentials or api key).', 500);
   }
