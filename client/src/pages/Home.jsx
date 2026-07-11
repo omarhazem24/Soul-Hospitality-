@@ -26,26 +26,6 @@ const normalizePrice = (value) => {
 
 const destinations = [
   {
-    title: 'Gaia',
-    image:
-      'https://res.cloudinary.com/zqhyzmvl/image/upload/v1783598436/images_7_hrp0i0_irwb5q.jpg'
-  },
-  {
-    title: 'Fouka Bay',
-    image:
-      'https://res.cloudinary.com/zqhyzmvl/image/upload/v1783598349/Fouka-Bay-North-Coast-Sales-Number_hstdjw_lwipn1.jpg'
-  },
-  {
-    title: 'Marassi',
-    image:
-      'https://res.cloudinary.com/zqhyzmvl/image/upload/v1783598434/573800842_ogt6bf_y7bfjh.jpg'
-  },
-  {
-    title: 'North Coast',
-    image:
-      'https://res.cloudinary.com/zqhyzmvl/image/upload/v1783598439/getimage_vfm9cs_n65a6n.jpg'
-  },
-  {
     title: 'Ain Sokhna',
     image:
       'https://res.cloudinary.com/zqhyzmvl/image/upload/v1783598437/porto-sokhna-beach-resort-servicios-12e06d36_ofqyg1_kaq1yt.jpg'
