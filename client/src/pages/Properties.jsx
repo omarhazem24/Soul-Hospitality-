@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Minus, Plus, RotateCcw, Search, SlidersHorizontal, X } from 'lucide-react';
 import { fetchAvailableUnits, fetchProjectNames } from '../api/http.js';
@@ -57,6 +57,91 @@ const AreaIcon = () => (
     <path d="M8 12h8M12 8v8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
   </svg>
 );
+
+// Draggable Floating WhatsApp Component
+const DraggableWhatsApp = () => {
+  const [position, setPosition] = useState({ x: 20, y: 20 });
+  const dragRef = useRef(null);
+  const isDragging = useRef(false);
+  const dragStart = useRef({ x: 0, y: 0 });
+  const initialPos = useRef({ x: 0, y: 0 });
+  const clickPrevent = useRef(false);
+
+  const handleStart = (clientX, clientY) => {
+    isDragging.current = true;
+    clickPrevent.current = false;
+    dragStart.current = { x: clientX, y: clientY };
+    initialPos.current = { ...position };
+  };
+
+  const handleMove = (clientX, clientY) => {
+    if (!isDragging.current) return;
+    const dx = dragStart.current.x - clientX; 
+    const dy = dragStart.current.y - clientY; 
+    
+    if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
+      clickPrevent.current = true;
+    }
+
+    setPosition({
+      x: Math.max(10, Math.min(window.innerWidth - 80, initialPos.current.x + dx)),
+      y: Math.max(10, Math.min(window.innerHeight - 80, initialPos.current.y + dy))
+    });
+  };
+
+  const handleEnd = () => {
+    isDragging.current = false;
+  };
+
+  useEffect(() => {
+    const onMouseMove = (e) => handleMove(e.clientX, e.clientY);
+    const onMouseUp = () => handleEnd();
+    const onTouchMove = (e) => {
+      if (e.touches.length > 0) handleMove(e.touches[0].clientX, e.touches[0].clientY);
+    };
+    const onTouchEnd = () => handleEnd();
+
+    if (isDragging.current) {
+      window.addEventListener('mousemove', onMouseMove);
+      window.addEventListener('mouseup', onMouseUp);
+      window.addEventListener('touchmove', onTouchMove, { passive: false });
+      window.addEventListener('touchend', onTouchEnd);
+    }
+    return () => {
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+      window.removeEventListener('touchmove', onTouchMove);
+      window.removeEventListener('touchend', onTouchEnd);
+    };
+  }, [position]);
+
+  return (
+    <div
+      ref={dragRef}
+      style={{ bottom: `${position.y}px`, right: `${position.x}px` }}
+      className="fixed z-50 select-none touch-none active:scale-95 transition-transform"
+      onMouseDown={(e) => handleStart(e.clientX, e.clientY)}
+      onTouchStart={(e) => handleStart(e.touches[0].clientX, e.touches[0].clientY)}
+    >
+      <a
+        href="https://wa.me/201000000000" // Replace with actual company phone number
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={(e) => {
+          if (clickPrevent.current) {
+            e.preventDefault();
+          }
+        }}
+        className="flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-xl hover:bg-[#20ba5a] cursor-grab active:cursor-grabbing"
+        aria-label="Chat on WhatsApp"
+      >
+        <svg viewBox="0 0 24 24" className="h-7 w-7 fill-current">
+          <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.516 2.266 2.27 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.713-1.455L0 24zm6.59-4.846c1.62.963 3.42 1.47 5.258 1.471 5.589 0 10.134-4.542 10.137-10.13.002-2.707-1.048-5.253-2.957-7.163C17.118 1.43 14.57 0.38 11.86 0.38c-5.59 0-10.134 4.542-10.137 10.13a10.09 10.09 0 0 0 1.508 5.218L2.083 22.03l6.43-1.686z" />
+        </svg>
+      </a>
+    </div>
+  );
+};
 
 const PropertyCard = ({ listing }) => (
   <Link
@@ -346,6 +431,7 @@ export const Properties = () => {
 
   return (
     <main className="bg-[#f8fafc]">
+      <DraggableWhatsApp />
       <section className="page-container py-6 lg:py-12 2xl:py-16 px-4 sm:px-6">
         <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="space-y-1.5">
@@ -416,12 +502,12 @@ export const Properties = () => {
           {/* Main Sidebar Wrapper */}
           <aside
             className={[
-              // Base Mobile Rules (Full-screen bottom sheet panel)
+              // Mobile View (Bottom Drawer Layering)
               isMobileFiltersOpen
                 ? 'fixed inset-x-0 bottom-0 top-16 z-50 flex flex-col bg-white rounded-t-[2rem] shadow-2xl overflow-hidden animate-in slide-in-from-bottom duration-300'
                 : 'hidden',
-              // Desktop Override Rules
-              'lg:sticky lg:top-6 lg:z-auto lg:flex lg:w-[380px] lg:h-auto lg:bg-white lg:border lg:border-slate-100 lg:rounded-[2rem] lg:shadow-none lg:overflow-visible'
+              // Desktop View (Reset position flow)
+              'lg:sticky lg:top-6 lg:z-auto lg:flex lg:flex-col lg:w-[320px] xl:w-[360px] lg:h-auto lg:bg-white lg:border lg:border-slate-100 lg:rounded-[2rem] lg:shadow-none lg:overflow-visible'
             ].join(' ')}
           >
             {/* Mobile Header fixed at top of drawer */}
@@ -441,7 +527,7 @@ export const Properties = () => {
             </div>
 
             {/* Scrollable Container for Filters */}
-            <div className="flex-1 overflow-y-auto px-6 py-5 lg:p-6 space-y-6 lg:space-y-6 pb-28 lg:pb-6 thin-scrollbar">
+            <div className="flex-1 overflow-y-auto px-6 py-5 lg:p-6 space-y-6 pb-28 lg:pb-6 thin-scrollbar">
               {/* Property Type */}
               <div>
                 <h3 className="mb-2.5 text-xs font-bold uppercase tracking-wider text-slate-400 sm:text-sm">Property Type</h3>
@@ -579,30 +665,30 @@ export const Properties = () => {
               </div>
             </div>
 
-            {/* Actions Panel - Sticky bottom footer layout on mobile devices */}
-            <div className="absolute bottom-0 inset-x-0 bg-white p-4 border-t border-slate-100 flex gap-3 lg:relative lg:border-none lg:p-6 lg:mt-0 shrink-0 z-10">
+            {/* Actions Panel - Styled to layout normally on desktop and pin securely on mobile */}
+            <div className="fixed bottom-0 inset-x-0 bg-white p-4 border-t border-slate-100 flex gap-3 shrink-0 z-10 lg:static lg:border-t-0 lg:p-6 lg:bg-transparent">
               <button 
                 type="button" 
                 onClick={applyFilters} 
-                className="flex-1 inline-flex items-center justify-center gap-2 rounded-full bg-[#134e5e] px-5 py-3 text-sm font-semibold uppercase tracking-[0.12em] text-white shadow-md active:bg-[#0f3e4b] transition-colors"
+                className="flex-1 inline-flex items-center justify-center gap-2 rounded-full bg-[#134e5e] px-4 py-3 text-xs font-bold uppercase tracking-[0.1em] text-white shadow-md active:bg-[#0f3e4b] transition-colors h-11"
               >
-                <SlidersHorizontal className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
-                Find Properties
+                <SlidersHorizontal className="h-3.5 w-3.5" strokeWidth={1.8} aria-hidden="true" />
+                Find Stays
               </button>
               <button 
                 type="button" 
                 onClick={resetFilters} 
-                className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-semibold uppercase tracking-[0.12em] text-slate-600 active:bg-slate-50 transition-colors"
+                className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-3 text-xs font-bold uppercase tracking-[0.1em] text-slate-600 active:bg-slate-50 transition-colors h-11"
                 aria-label="Clear property filters"
               >
-                <RotateCcw className="h-4 w-4" strokeWidth={1.6} aria-hidden="true" />
+                <RotateCcw className="h-3.5 w-3.5" strokeWidth={1.8} aria-hidden="true" />
                 Clear
               </button>
             </div>
           </aside>
 
           {/* Properties Grid */}
-          <section className="flex-1 grid grid-cols-1 gap-6 items-stretch md:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3 2xl:gap-8">
+          <section className="flex-1 grid grid-cols-1 gap-6 items-start md:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3 2xl:gap-8">
             {loading ? (
               <div className="col-span-full rounded-3xl border border-slate-100 bg-white p-8 text-sm text-slate-500 shadow-sm text-center">Loading curated properties...</div>
             ) : null}
